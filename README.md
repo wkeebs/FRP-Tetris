@@ -1,7 +1,7 @@
 # FIT2102 Assignment 1 - FRP Tetris!
 This project originated as an assignment for FIT2102 - Programming Paradigms, as a part of my Bachelor's Degree of Computer Science at Monash University.
 
-All credit goes to Tim Dwyer and the FIT2102 team from Semester 2, 2023 for the idea, scaffold files and constraints for this project!
+All credit goes to Tim Dwyer and the FIT2102 team from Semester 2, 2023 for the idea, scaffold files and constraints for this project.
 
 Check out Tim's awesome work at [Tim's Code Stuff](https://tgdwyer.github.io/)!
 
