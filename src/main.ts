@@ -27,7 +27,7 @@ const Viewport = {
 } as const;
 
 const Constants = {
-  TICK_RATE_MS: 500,
+  TICK_RATE_MS: 1000,
   GRID_WIDTH: 10,
   GRID_HEIGHT: 20,
   MOVE_BY: 10
@@ -45,6 +45,21 @@ type Key = "KeyS" | "KeyA" | "KeyD";
 type Event = "keydown" | "keyup" | "keypress";
 
 /** Utility functions */
+
+/**
+ * Creates an Observable object for a given event.
+ * @param eventName The Event.
+ * @param k The Key.
+ * @param result The resulting function.
+ * @returns The Observable object.
+ */
+const observeKey = <T>(eventName: Event, k: Key, result: () => T) =>
+fromEvent<KeyboardEvent>(document, eventName)
+  .pipe(
+    filter(({code}) => code === k),
+    filter(({repeat}) => !repeat),
+    map(result)
+  )
 
 /** State processing */
 
