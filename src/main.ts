@@ -63,6 +63,27 @@ const initialState: State = {
  */
 const tick = (s: State) => s;
 
+/** Coordinate Manipulation */
+
+type Coordinate = Readonly<{
+  x: number,
+  y: number
+}>;
+
+/**
+ * Purely transforms a Coordinate object.
+ * @param coord Coordinate to be transformed.
+ * @param transX Value to transform x dimension by.
+ * @param transY Value to transform y dimension by.
+ * @returns A new, tranformed Coordinate object.
+ */
+function moveCoordinate(coord: Coordinate, transX: number, transY: number) {
+  return <Coordinate>{
+    x: coord.x + transX,
+    y: coord.y + transY
+  }
+}
+
 /** Rendering (side effects) */
 
 /**
@@ -159,22 +180,23 @@ export function main() {
       style: "fill: green",
     });
     svg.appendChild(cube);
-    const cube2 = createSvgElement(svg.namespaceURI, "rect", {
-      height: `${Block.HEIGHT}`,
-      width: `${Block.WIDTH}`,
-      x: `${Block.WIDTH * (3 - 1)}`,
-      y: `${Block.HEIGHT * (20 - 1)}`,
-      style: "fill: red",
-    });
-    svg.appendChild(cube2);
-    const cube3 = createSvgElement(svg.namespaceURI, "rect", {
-      height: `${Block.HEIGHT}`,
-      width: `${Block.WIDTH}`,
-      x: `${Block.WIDTH * (4 - 1)}`,
-      y: `${Block.HEIGHT * (20 - 1)}`,
-      style: "fill: red",
-    });
-    svg.appendChild(cube3);
+
+    // const cube2 = createSvgElement(svg.namespaceURI, "rect", {
+    //   height: `${Block.HEIGHT}`,
+    //   width: `${Block.WIDTH}`,
+    //   x: `${Block.WIDTH * (3 - 1)}`,
+    //   y: `${Block.HEIGHT * (20 - 1)}`,
+    //   style: "fill: red",
+    // });
+    // svg.appendChild(cube2);
+    // const cube3 = createSvgElement(svg.namespaceURI, "rect", {
+    //   height: `${Block.HEIGHT}`,
+    //   width: `${Block.WIDTH}`,
+    //   x: `${Block.WIDTH * (4 - 1)}`,
+    //   y: `${Block.HEIGHT * (20 - 1)}`,
+    //   style: "fill: red",
+    // });
+    // svg.appendChild(cube3);
 
     // Add a block to the preview canvas
     const cubePreview = createSvgElement(preview.namespaceURI, "rect", {
@@ -188,7 +210,7 @@ export function main() {
   };
 
   const source$ = merge(tick$)
-    .pipe(scan((s: State) => ({ gameEnd: true }), initialState))
+    .pipe(scan((s: State) => ({ gameEnd: false }), initialState))
     .subscribe((s: State) => {
       render(s);
 
