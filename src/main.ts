@@ -30,7 +30,7 @@ const Constants = {
   TICK_RATE_MS: 1000,
   GRID_WIDTH: 10,
   GRID_HEIGHT: 20,
-  MOVE_BY: 10
+  MOVE_BY: 20,
 } as const;
 
 const Block = {
@@ -53,13 +53,16 @@ type Event = "keydown" | "keyup" | "keypress";
  * @param result The resulting function.
  * @returns The Observable object.
  */
-const observeKey = <T>(eventName: Event, k: Key, result: () => T) =>
-fromEvent<KeyboardEvent>(document, eventName)
-  .pipe(
-    filter(({code}) => code === k),
-    filter(({repeat}) => !repeat),
+const observeKey = <T>(
+  eventName: Event,
+  k: Key,
+  result: () => T
+): Observable<T> =>
+  fromEvent<KeyboardEvent>(document, eventName).pipe(
+    filter(({ code }) => code === k),
+    filter(({ repeat }) => !repeat),
     map(result)
-  )
+  );
 
 /** State processing */
 
@@ -79,11 +82,14 @@ const initialState: State = {
  */
 const tick = (s: State) => s;
 
-/** Coordinate Manipulation */
+/** Element Positioning */
+// class Move {
+//   constructor(public readonly position: Coordinate) {}
+// }
 
 type Coordinate = Readonly<{
-  x: number,
-  y: number
+  x: number;
+  y: number;
 }>;
 
 /**
@@ -93,25 +99,32 @@ type Coordinate = Readonly<{
  * @param transY Value to transform y dimension by.
  * @returns A new, tranformed Coordinate object.
  */
-function moveCoordinate(coord: Coordinate, transX: number, transY: number): Coordinate {
+function moveCoordinate(
+  coord: Coordinate,
+  transX: number,
+  transY: number
+): Coordinate {
   return <Coordinate>{
     x: coord.x + transX,
-    y: coord.y + transY
-  }
+    y: coord.y + transY,
+  };
 }
 
 /**
  * Purely merges two coordinates together.
  * @param firstCoord
- * @param secondCoord 
- * @returns A new Coordinate object, with the values of firstCoord 
+ * @param secondCoord
+ * @returns A new Coordinate object, with the values of firstCoord
  * and secondCoord merged together.
  */
-function mergeCoordinates(firstCoord: Coordinate, secondCoord: Coordinate): Coordinate {
+function mergeCoordinates(
+  firstCoord: Coordinate,
+  secondCoord: Coordinate
+): Coordinate {
   return <Coordinate>{
     x: firstCoord.x + secondCoord.x,
-    y: firstCoord.y + secondCoord.y
-  }
+    y: firstCoord.y + secondCoord.y,
+  };
 }
 
 /** Rendering (side effects) */
@@ -155,15 +168,15 @@ const createSvgElement = (
 
 /**
  * Impurely moves an SVG element.
- * 
- * ~~~ ONLY for use when subscribing to an Observable ~~~
- * @param elem 
- * @param coords 
+ *
+ * !! ONLY for use when subscribing to an Observable !!
+ * @param elem
+ * @param coords
  */
 const moveSvgElement = (elem: SVGElement) => (coords: Coordinate) => {
   elem.setAttribute("x", String(coords.x));
   elem.setAttribute("y", String(coords.y));
-}
+};
 
 /**
  * This is the function called on page load. Your main game loop
@@ -196,42 +209,25 @@ export function main() {
   const fromKey = (keyCode: Key) =>
     key$.pipe(filter(({ code }) => code === keyCode));
 
-  const left$ = fromKey("KeyA");
-  const right$ = fromKey("KeyD");
-  const down$ = fromKey("KeyS");
-
   /** Movement Streams */
-  const INITIAL_COORDS = <Coordinate>{x: 0, y:0}
+  const INITIAL_COORDS = <Coordinate>{ x: 0, y: 0 };
 
   // Coordinate objects to utilise when moving in each direction.
-  const 
-    moveLeftCoord = <Coordinate>{x: -1*Constants.MOVE_BY, y: 0},
-    moveRightCoord = <Coordinate>{x: Constants.MOVE_BY, y: 0},
-    moveDownCoord = <Coordinate>{x: 0, y: Constants.MOVE_BY};
-
-  /**
-   * Creates an Observable for each movement stream.
-   * @param keyStream$ Observable stream for the given keypress.
-   * @param coord The coordinate used for movement.
-   */
-  const keyMove = (keyStream$: Observable<KeyboardEvent>, coord: Coordinate) =>
-    keyStream$.pipe(
-      map((): Coordinate => coord)
-    );
-
-  /** Observable streams for all movement actions. */
-  const 
-    moveLeft$ = keyMove(left$, moveLeftCoord),
-    moveRight$ = keyMove(right$, moveRightCoord),
-    moveDown$ = keyMove(down$, moveDownCoord);
-
-  /** Main movement stream */
-  const moveStream$ = merge(moveLeft$, moveRight$, moveDown$)
-    .pipe(
-      scan(mergeCoordinates, INITIAL_COORDS)
-    )
+  const moveLeftCoord = <Coordinate>{ x: -1 * Constants.MOVE_BY, y: 0 },
+    moveRightCoord = <Coordinate>{ x: Constants.MOVE_BY, y: 0 },
+    moveDownCoord = <Coordinate>{ x: 0, y: Constants.MOVE_BY };
 
   /** Observables */
+
+  /** Create an Observable for each movement direction */
+  const moveLeft$ = observeKey("keydown", "KeyA", () => moveLeftCoord),
+    moveRight$ = observeKey("keydown", "KeyD", () => moveRightCoord),
+    moveDown$ = observeKey("keydown", "KeyS", () => moveDownCoord);
+
+  /** Main movement stream */
+  const moveStream$ = merge(moveLeft$, moveRight$, moveDown$).pipe(
+    scan(mergeCoordinates, INITIAL_COORDS)
+  );
 
   /** Determines the rate of time steps */
   const tick$ = interval(Constants.TICK_RATE_MS);
@@ -258,7 +254,7 @@ export function main() {
     const moveCube = moveSvgElement(cube);
 
     moveStream$.subscribe((coord: Coordinate) => {
-      moveCube(coord)
+      moveCube(coord);
     });
     /** */
 
@@ -289,6 +285,6 @@ export function main() {
 // The following simply runs your main function on window load.  Make sure to leave it in place.
 if (typeof window !== "undefined") {
   window.onload = () => {
-    // main();
+    main();
   };
 }
