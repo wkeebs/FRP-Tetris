@@ -14,7 +14,7 @@
 
 import "./style.css";
 
-import { fromEvent, interval, merge } from "rxjs";
+import { Observable, fromEvent, interval, merge } from "rxjs";
 import { map, filter, scan } from "rxjs/operators";
 
 /** Constants */
@@ -30,6 +30,7 @@ const Constants = {
   TICK_RATE_MS: 500,
   GRID_WIDTH: 10,
   GRID_HEIGHT: 20,
+  MOVE_BY: 10
 } as const;
 
 const Block = {
@@ -77,7 +78,7 @@ type Coordinate = Readonly<{
  * @param transY Value to transform y dimension by.
  * @returns A new, tranformed Coordinate object.
  */
-function moveCoordinate(coord: Coordinate, transX: number, transY: number) {
+function moveCoordinate(coord: Coordinate, transX: number, transY: number): Coordinate {
   return <Coordinate>{
     x: coord.x + transX,
     y: coord.y + transY
@@ -157,6 +158,28 @@ export function main() {
   const left$ = fromKey("KeyA");
   const right$ = fromKey("KeyD");
   const down$ = fromKey("KeyS");
+
+  /** Movement Streams */
+  // Coordinate objects to utilise when moving in each direction.
+  const moveLeftCoord = <Coordinate>{x: -1*Constants.MOVE_BY, y: 0};
+  const moveRightCoord = <Coordinate>{x: Constants.MOVE_BY, y: 0};
+  const moveDownCoord = <Coordinate>{x: 0, y: Constants.MOVE_BY};
+
+  /**
+   * Creates an Observable for each movement stream.
+   * @param keyStream$ Observable stream for the given keypress.
+   * @param coord The coordinate used for movement.
+   */
+  const keyMove = (keyStream$: Observable<KeyboardEvent>, coord: Coordinate) => {
+    keyStream$.pipe(
+      map((): Coordinate => coord)
+    );
+  }
+
+  /** Observable streams for all movement actions. */
+  const moveLeft$ = keyMove(left$, moveLeftCoord);
+  const moveRight$ = keyMove(right$, moveRightCoord);
+  const moveDown$ = keyMove(left$, moveDownCoord);
 
   /** Observables */
 
