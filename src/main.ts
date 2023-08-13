@@ -85,6 +85,20 @@ function moveCoordinate(coord: Coordinate, transX: number, transY: number): Coor
   }
 }
 
+/**
+ * Purely merges two coordinates together.
+ * @param firstCoord
+ * @param secondCoord 
+ * @returns A new Coordinate object, with the values of firstCoord 
+ * and secondCoord merged together.
+ */
+function mergeCoordinates(firstCoord: Coordinate, secondCoord: Coordinate): Coordinate {
+  return <Coordinate>{
+    x: firstCoord.x + secondCoord.x,
+    y: firstCoord.y + secondCoord.y
+  }
+}
+
 /** Rendering (side effects) */
 
 /**
@@ -125,6 +139,18 @@ const createSvgElement = (
 };
 
 /**
+ * Impurely moves an SVG element.
+ * 
+ * ~~~ ONLY for use when subscribing to an Observable ~~~
+ * @param elem 
+ * @param coords 
+ */
+const moveSvgElement = (elem: SVGElement) => (coords: Coordinate) => {
+  elem.setAttribute("x", String(coords.x));
+  elem.setAttribute("y", String(coords.y));
+}
+
+/**
  * This is the function called on page load. Your main game loop
  * should be called here.
  */
@@ -160,26 +186,35 @@ export function main() {
   const down$ = fromKey("KeyS");
 
   /** Movement Streams */
+  const INITIAL_COORDS = <Coordinate>{x: 0, y:0}
+
   // Coordinate objects to utilise when moving in each direction.
-  const moveLeftCoord = <Coordinate>{x: -1*Constants.MOVE_BY, y: 0};
-  const moveRightCoord = <Coordinate>{x: Constants.MOVE_BY, y: 0};
-  const moveDownCoord = <Coordinate>{x: 0, y: Constants.MOVE_BY};
+  const 
+    moveLeftCoord = <Coordinate>{x: -1*Constants.MOVE_BY, y: 0},
+    moveRightCoord = <Coordinate>{x: Constants.MOVE_BY, y: 0},
+    moveDownCoord = <Coordinate>{x: 0, y: Constants.MOVE_BY};
 
   /**
    * Creates an Observable for each movement stream.
    * @param keyStream$ Observable stream for the given keypress.
    * @param coord The coordinate used for movement.
    */
-  const keyMove = (keyStream$: Observable<KeyboardEvent>, coord: Coordinate) => {
+  const keyMove = (keyStream$: Observable<KeyboardEvent>, coord: Coordinate) =>
     keyStream$.pipe(
       map((): Coordinate => coord)
     );
-  }
 
   /** Observable streams for all movement actions. */
-  const moveLeft$ = keyMove(left$, moveLeftCoord);
-  const moveRight$ = keyMove(right$, moveRightCoord);
-  const moveDown$ = keyMove(left$, moveDownCoord);
+  const 
+    moveLeft$ = keyMove(left$, moveLeftCoord),
+    moveRight$ = keyMove(right$, moveRightCoord),
+    moveDown$ = keyMove(down$, moveDownCoord);
+
+  /** Main movement stream */
+  const moveStream$ = merge(moveLeft$, moveRight$, moveDown$)
+    .pipe(
+      scan(mergeCoordinates, INITIAL_COORDS)
+    )
 
   /** Observables */
 
@@ -204,22 +239,13 @@ export function main() {
     });
     svg.appendChild(cube);
 
-    // const cube2 = createSvgElement(svg.namespaceURI, "rect", {
-    //   height: `${Block.HEIGHT}`,
-    //   width: `${Block.WIDTH}`,
-    //   x: `${Block.WIDTH * (3 - 1)}`,
-    //   y: `${Block.HEIGHT * (20 - 1)}`,
-    //   style: "fill: red",
-    // });
-    // svg.appendChild(cube2);
-    // const cube3 = createSvgElement(svg.namespaceURI, "rect", {
-    //   height: `${Block.HEIGHT}`,
-    //   width: `${Block.WIDTH}`,
-    //   x: `${Block.WIDTH * (4 - 1)}`,
-    //   y: `${Block.HEIGHT * (20 - 1)}`,
-    //   style: "fill: red",
-    // });
-    // svg.appendChild(cube3);
+    /** TEMPORARY FOR MOVING THE INITIAL CUBE */
+    const moveCube = moveSvgElement(cube);
+
+    moveStream$.subscribe((coord: Coordinate) => {
+      moveCube(coord)
+    });
+    /** */
 
     // Add a block to the preview canvas
     const cubePreview = createSvgElement(preview.namespaceURI, "rect", {
@@ -248,6 +274,6 @@ export function main() {
 // The following simply runs your main function on window load.  Make sure to leave it in place.
 if (typeof window !== "undefined") {
   window.onload = () => {
-    main();
+    // main();
   };
 }
