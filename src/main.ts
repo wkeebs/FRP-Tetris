@@ -17,8 +17,7 @@ import "./style.css";
 import { Observable, fromEvent, interval, merge } from "rxjs";
 import { map, filter, scan } from "rxjs/operators";
 
-/** Constants */
-
+/** ==================== Constants ==================== **/
 const Viewport = {
   CANVAS_WIDTH: 200,
   CANVAS_HEIGHT: 400,
@@ -38,13 +37,13 @@ const Block = {
   HEIGHT: Viewport.CANVAS_HEIGHT / Constants.GRID_HEIGHT,
 };
 
-/** User input */
+/** ==================== User Input ==================== **/
 
 type Key = "KeyS" | "KeyA" | "KeyD";
 
 type Event = "keydown" | "keyup" | "keypress";
 
-/** Utility functions */
+/** ==================== Utility Functions ==================== **/
 
 /**
  * Creates an Observable object for a given event.
@@ -64,8 +63,7 @@ const observeKey = <T>(
     map(result)
   );
 
-/** State processing */
-
+/** ==================== State Processing ==================== **/
 type State = Readonly<{
   gameEnd: boolean;
 }>;
@@ -82,11 +80,15 @@ const initialState: State = {
  */
 const tick = (s: State) => s;
 
-/** Element Positioning */
+/** ==================== Element Positioning ==================== **/
 // class Move {
 //   constructor(public readonly position: Coordinate) {}
 // }
 
+/**
+ * A Coordinate type for identifying and manipulating element position
+ * relative to the game canvas.
+ */
 type Coordinate = Readonly<{
   x: number;
   y: number;
@@ -127,8 +129,7 @@ function mergeCoordinates(
   };
 }
 
-/** Rendering (side effects) */
-
+/** ==================== Rendering (SIDE EFFECTS) ==================== **/
 /**
  * Displays a SVG element on the canvas. Brings to foreground.
  * @param elem SVG element to display
@@ -168,8 +169,8 @@ const createSvgElement = (
 
 /**
  * Impurely moves an SVG element.
- *
- * !! ONLY for use when subscribing to an Observable !!
+ * 
+ * !! Only for use when subscribing to an Observable !!
  * @param elem
  * @param coords
  */
@@ -178,12 +179,14 @@ const moveSvgElement = (elem: SVGElement) => (coords: Coordinate) => {
   elem.setAttribute("y", String(coords.y));
 };
 
+/** =================================================== **/
+/** ==================== MAIN LOOP ==================== **/
 /**
  * This is the function called on page load. Your main game loop
  * should be called here.
  */
 export function main() {
-  // Canvas elements
+  /** ==================== Canvas Elements ==================== **/
   const svg = document.querySelector("#svgCanvas") as SVGGraphicsElement &
     HTMLElement;
   const preview = document.querySelector("#svgPreview") as SVGGraphicsElement &
@@ -197,19 +200,18 @@ export function main() {
   preview.setAttribute("height", `${Viewport.PREVIEW_HEIGHT}`);
   preview.setAttribute("width", `${Viewport.PREVIEW_WIDTH}`);
 
-  // Text fields
+  /** ==================== Text Fields ==================== **/
   const levelText = document.querySelector("#levelText") as HTMLElement;
   const scoreText = document.querySelector("#scoreText") as HTMLElement;
   const highScoreText = document.querySelector("#highScoreText") as HTMLElement;
 
-  /** User input */
-
+  /** ==================== User Input ==================== **/
   const key$ = fromEvent<KeyboardEvent>(document, "keypress");
 
   const fromKey = (keyCode: Key) =>
     key$.pipe(filter(({ code }) => code === keyCode));
 
-  /** Movement Streams */
+  /** ==================== Movement Streams ==================== **/
   const INITIAL_COORDS = <Coordinate>{ x: 0, y: 0 };
 
   // Coordinate objects to utilise when moving in each direction.
@@ -217,8 +219,7 @@ export function main() {
     moveRightCoord = <Coordinate>{ x: Constants.MOVE_BY, y: 0 },
     moveDownCoord = <Coordinate>{ x: 0, y: Constants.MOVE_BY };
 
-  /** Observables */
-
+  /** ==================== Observables ==================== **/
   /** Create an Observable for each movement direction */
   const moveLeft$ = observeKey("keydown", "KeyA", () => moveLeftCoord),
     moveRight$ = observeKey("keydown", "KeyD", () => moveRightCoord),
@@ -232,6 +233,7 @@ export function main() {
   /** Determines the rate of time steps */
   const tick$ = interval(Constants.TICK_RATE_MS);
 
+  /** ==================== Rendering ==================== **/
   /**
    * Renders the current state to the canvas.
    *
