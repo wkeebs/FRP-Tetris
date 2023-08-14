@@ -1,7 +1,10 @@
 import { Observable, fromEvent, interval, merge } from "rxjs";
 import { map, filter, scan } from "rxjs/operators";
 
-import { Coordinate, Key, Event } from "./types.ts";
+import { Coordinate, Key, Event, Cube, Piece } from "./types.ts";
+import { Block } from "./main.ts";
+import { createSvgElement } from "./view.ts";
+import { initial_coords } from "./observable.ts";
 
 /**
  * Creates an Observable object for a given event.
@@ -17,7 +20,7 @@ export function observeKey<T>(
 ): Observable<T> {
   return fromEvent<KeyboardEvent>(document, eventName).pipe(
     filter(({ code }) => code === k),
-    filter(({ repeat }) => !repeat),
+    // filter(({ repeat }) => !repeat),
     map(result)
   );
 }
@@ -55,3 +58,34 @@ export function mergeCoordinates(
     y: firstCoord.y + secondCoord.y,
   };
 }
+
+export const createCube =
+  (canvas: SVGGraphicsElement & HTMLElement, colour: string) =>
+  (coords: Coordinate) => {
+    const element: SVGElement = createSvgElement(canvas.namespaceURI, "rect", {
+      height: `${Block.HEIGHT}`,
+      width: `${Block.WIDTH}`,
+      x: String(coords.x),
+      y: String(coords.y),
+      style: `fill: ${colour}`,
+    });
+    canvas.appendChild(element);
+    return new Cube("TEMP", coords, element);
+  };
+
+export const createSquarePiece = (
+  canvas: SVGGraphicsElement & HTMLElement,
+  coords: Coordinate
+) => {
+  const makeCube = createCube(canvas, "green");
+  const cubes: Cube[] = [
+    makeCube(<Coordinate>{ x: coords.x, y: coords.y }),
+    makeCube(<Coordinate>{ x: coords.x + 20, y: coords.y }),
+    makeCube(<Coordinate>{ x: coords.x, y: coords.y + 20 }),
+    makeCube(<Coordinate>{
+      x: coords.x + 20,
+      y: coords.y + 20,
+    }),
+  ];
+  return new Piece(cubes);
+};

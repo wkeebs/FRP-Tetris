@@ -1,3 +1,4 @@
+import { State } from "./state";
 import { Coordinate } from "./types";
 
 /**
@@ -31,6 +32,16 @@ export const createSvgElement = (
 export const moveSvgElement = (elem: SVGElement) => (coords: Coordinate) => {
   elem.setAttribute("x", String(coords.x));
   elem.setAttribute("y", String(coords.y));
+};
+
+/**
+ * Renders the current state to the canvas.
+ *
+ * In MVC terms, this updates the View using the Model.
+ *
+ * @param s Current state
+ */
+export const render = (s: State) => {
 };
 
 /**

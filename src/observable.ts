@@ -1,5 +1,5 @@
 import { merge, scan, interval, filter, fromEvent } from "rxjs";
-import { Coordinate, Cube, Key, Move } from "./types";
+import { Coordinate, Cube, Key, Move, Piece } from "./types";
 import { observeKey, mergeCoordinates } from "./util";
 import { Constants } from "./main";
 import { moveSvgElement } from "./view";
@@ -24,13 +24,23 @@ export const moveLeft$ = observeKey("keydown", "KeyA", () => moveLeftCoord),
 /** Main movement stream */
 export const moveInputStream$ = merge(moveLeft$, moveRight$, moveDown$);
 
+/** Returns a subscription to move a given Cube object */
 export const moveCubeSubscription = (cube: Cube) =>
-  moveInputStream$.pipe(
-    scan(
-      (accum: Coordinate, val: Coordinate) => mergeCoordinates(accum, val),
-      cube.position
+  moveInputStream$
+    .pipe(
+      scan(
+        (accum: Coordinate, val: Coordinate) => mergeCoordinates(accum, val),
+        cube.position
+      )
     )
-  ).subscribe(moveSvgElement(cube.svgElement));
+    .subscribe(moveSvgElement(cube.svgElement));
+
+/** Returns a subscription to move an entire Piece object */
+export const movePieceSubscription = (piece?: Piece) =>
+  piece ? piece.cubes.map(moveCubeSubscription): null;
+
 
 /** Determines the rate of time steps */
 export const tick$ = interval(Constants.TICK_RATE_MS);
+
+

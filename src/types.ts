@@ -1,4 +1,4 @@
-import { Observable, fromEvent, interval, merge } from "rxjs";
+import { Observable, Subscription, fromEvent, interval, merge } from "rxjs";
 import { map, filter, scan } from "rxjs/operators";
 import { moveSvgElement } from "./view";
 
@@ -25,8 +25,10 @@ export class Cube {
     public readonly position: Coordinate,
     public readonly svgElement: SVGElement
   ) {}
-  move = (coord: Coordinate) => {
-    moveSvgElement(this.svgElement);
-    return new Cube(this.id, coord, this.svgElement);
-  }
+}
+
+export class Piece {
+  constructor(
+    public readonly cubes: Cube[],
+  ) {}
 }
