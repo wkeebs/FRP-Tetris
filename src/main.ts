@@ -16,7 +16,7 @@ import "./style.css";
 
 import "./observable.ts";
 import "./state.ts";
-import { Coordinate, Key, Event } from "./types.ts";
+import { Coordinate, Key, Event, Cube } from "./types.ts";
 import { mergeCoordinates, observeKey } from "./util.ts";
 import "./view.ts";
 
@@ -24,7 +24,7 @@ import { Observable, fromEvent, interval, merge } from "rxjs";
 import { map, filter, scan } from "rxjs/operators";
 import { State, initialState } from "./state.ts";
 import { createSvgElement, moveSvgElement, show, hide } from "./view.ts";
-import { moveStream$, tick$ } from "./observable.ts";
+import { initial_coords, moveCubeSubscription, tick$ } from "./observable.ts";
 
 /** ==================== Constants ==================== **/
 export const Viewport = {
@@ -45,6 +45,8 @@ export const Block = {
   WIDTH: Viewport.CANVAS_WIDTH / Constants.GRID_WIDTH,
   HEIGHT: Viewport.CANVAS_HEIGHT / Constants.GRID_HEIGHT,
 };
+
+const INITIAL_ID = "1";
 
 /** ==================== MAIN LOOP ==================== **/
 /**
@@ -72,6 +74,28 @@ export function main() {
   const highScoreText = document.querySelector("#highScoreText") as HTMLElement;
 
   /** ==================== Rendering ==================== **/
+  // Add blocks to the main grid canvas
+  const cube = createSvgElement(svg.namespaceURI, "rect", {
+    height: `${Block.HEIGHT}`,
+    width: `${Block.WIDTH}`,
+    x: "0",
+    y: "0",
+    style: "fill: green",
+  });
+  svg.appendChild(cube);
+
+  const initialCube = new Cube(INITIAL_ID, initial_coords, cube);
+  moveCubeSubscription(initialCube)
+
+  // Add a block to the preview canvas
+  const cubePreview = createSvgElement(preview.namespaceURI, "rect", {
+    height: `${Block.HEIGHT}`,
+    width: `${Block.WIDTH}`,
+    x: `${Block.WIDTH * 2}`,
+    y: `${Block.HEIGHT}`,
+    style: "fill: green",
+  });
+  preview.appendChild(cubePreview);
   /**
    * Renders the current state to the canvas.
    *
@@ -79,35 +103,7 @@ export function main() {
    *
    * @param s Current state
    */
-  const render = (s: State) => {
-    // Add blocks to the main grid canvas
-    const cube = createSvgElement(svg.namespaceURI, "rect", {
-      height: `${Block.HEIGHT}`,
-      width: `${Block.WIDTH}`,
-      x: "0",
-      y: "0",
-      style: "fill: green",
-    });
-    svg.appendChild(cube);
-
-    /** TEMPORARY FOR MOVING THE INITIAL CUBE */
-    const moveCube = moveSvgElement(cube);
-
-    moveStream$.subscribe((coord: Coordinate) => {
-      moveCube(coord);
-    });
-    /** */
-
-    // Add a block to the preview canvas
-    const cubePreview = createSvgElement(preview.namespaceURI, "rect", {
-      height: `${Block.HEIGHT}`,
-      width: `${Block.WIDTH}`,
-      x: `${Block.WIDTH * 2}`,
-      y: `${Block.HEIGHT}`,
-      style: "fill: green",
-    });
-    preview.appendChild(cubePreview);
-  };
+  const render = (s: State) => {};
 
   const source$ = merge(tick$)
     .pipe(scan((s: State) => ({ gameEnd: false }), initialState))

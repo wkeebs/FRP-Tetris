@@ -1,7 +1,8 @@
 import { merge, scan, interval, filter, fromEvent } from "rxjs";
-import { Coordinate, Key } from "./types";
+import { Coordinate, Cube, Key, Move } from "./types";
 import { observeKey, mergeCoordinates } from "./util";
 import { Constants } from "./main";
+import { moveSvgElement } from "./view";
 
 const key$ = fromEvent<KeyboardEvent>(document, "keypress");
 
@@ -21,9 +22,15 @@ export const moveLeft$ = observeKey("keydown", "KeyA", () => moveLeftCoord),
   moveDown$ = observeKey("keydown", "KeyS", () => moveDownCoord);
 
 /** Main movement stream */
-export const moveStream$ = merge(moveLeft$, moveRight$, moveDown$).pipe(
-  scan(mergeCoordinates, initial_coords)
-);
+export const moveInputStream$ = merge(moveLeft$, moveRight$, moveDown$);
+
+export const moveCubeSubscription = (cube: Cube) =>
+  moveInputStream$.pipe(
+    scan(
+      (accum: Coordinate, val: Coordinate) => mergeCoordinates(accum, val),
+      cube.position
+    )
+  ).subscribe(moveSvgElement(cube.svgElement));
 
 /** Determines the rate of time steps */
 export const tick$ = interval(Constants.TICK_RATE_MS);

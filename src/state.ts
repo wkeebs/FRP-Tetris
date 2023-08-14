@@ -1,3 +1,5 @@
+import { Cube } from "./types";
+
 export type State = Readonly<{
   gameEnd: boolean;
 }>;
