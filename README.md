@@ -1,7 +1,9 @@
-# FIT2102 Assignment 1 - FRP Tetris!
-This project originated as an assignment for FIT2102 - Programming Paradigms, as a part of my Bachelor's Degree of Computer Science at Monash University.
+# FRP Tetris
+Classic Tetris... but FRP style... 
 
-All credit goes to Tim Dwyer and the FIT2102 team from Semester 2, 2023 for the idea, scaffold files and constraints for this project.
+Implemented in a Functional Reactive Programming (FRP) style in Typescript, this project puts a funky spin on the implementation of the classic arcade game.
+
+Huge thanks Tim Dwyer for the idea, scaffold files and constraints for this project.
 
 Check out Tim's awesome work at [Tim's Code Stuff](https://tgdwyer.github.io/)!
 
