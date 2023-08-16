@@ -1,5 +1,8 @@
-import { State } from "./state";
-import { Coordinate } from "./types";
+
+import { Cube, Move, State, Viewport } from "./types";
+import { isNotNullOrUndefined } from "./util";
+
+export { initialiseView, updateView }
 
 /**
  * Creates an SVG element with the given properties.
@@ -12,7 +15,7 @@ import { Coordinate } from "./types";
  * @param props Properties to set on the SVG element
  * @returns SVG element
  */
-export const createSvgElement = (
+const createSvgElement = (
   namespace: string | null,
   name: string,
   props: Record<string, string> = {}
@@ -25,23 +28,12 @@ export const createSvgElement = (
 /**
  * Impurely moves an SVG element.
  *
- * !! Only for use when subscribing to an Observable !!
  * @param elem
  * @param coords
  */
-export const moveSvgElement = (elem: SVGElement) => (coords: Coordinate) => {
-  elem.setAttribute("x", String(coords.x));
-  elem.setAttribute("y", String(coords.y));
-};
-
-/**
- * Renders the current state to the canvas.
- *
- * In MVC terms, this updates the View using the Model.
- *
- * @param s Current state
- */
-export const render = (s: State) => {
+const moveSvgElement = (elem: SVGElement) => (move: Move) => {
+  elem.setAttribute("x", String(move.x));
+  elem.setAttribute("y", String(move.y));
 };
 
 /**
@@ -59,3 +51,59 @@ export const show = (elem: SVGGraphicsElement) => {
  */
 export const hide = (elem: SVGGraphicsElement) =>
   elem.setAttribute("visibility", "hidden");
+
+const initialiseView = () => {
+  const svg = document.querySelector("#svgCanvas") as SVGGraphicsElement &
+    HTMLElement;
+  const preview = document.querySelector("#svgPreview") as SVGGraphicsElement &
+    HTMLElement;
+  const gameover = document.querySelector("#gameOver") as SVGGraphicsElement &
+    HTMLElement;
+  const container = document.querySelector("#main") as HTMLElement;
+
+  svg.setAttribute("height", `${Viewport.CANVAS_HEIGHT}`);
+  svg.setAttribute("width", `${Viewport.CANVAS_WIDTH}`);
+  preview.setAttribute("height", `${Viewport.PREVIEW_HEIGHT}`);
+  preview.setAttribute("width", `${Viewport.PREVIEW_WIDTH}`);
+};
+
+const updateView =
+  (onFinish: () => void) =>
+  (s: State): void => {
+    // Visual element references
+    const svg = document.querySelector("#svgCanvas") as SVGGraphicsElement &
+      HTMLElement;
+    const preview = document.querySelector(
+      "#svgPreview"
+    ) as SVGGraphicsElement & HTMLElement;
+    const gameover = document.querySelector("#gameOver") as SVGGraphicsElement &
+      HTMLElement;
+    const container = document.querySelector("#main") as HTMLElement;
+
+    // Text fields
+    const levelText = document.querySelector("#levelText") as HTMLElement;
+    const scoreText = document.querySelector("#scoreText") as HTMLElement;
+    const highScoreText = document.querySelector("#highScoreText") as HTMLElement;
+
+    // if elements are null, exit function early
+    if (!svg || preview) return;
+
+    // remove all cubes that need to be deleted
+    s.exit
+      .map((c) => document.getElementById(c.id))
+      .filter(isNotNullOrUndefined)
+      .forEach((v) => {
+        try {
+          svg.removeChild(v);
+        } catch (e) {
+          console.log("Already removed: " + v.id);
+        }
+      });
+
+    // game end
+    if (s.gameEnd) {
+      show(gameover);
+    } else {
+      hide(gameover);
+    }
+  };

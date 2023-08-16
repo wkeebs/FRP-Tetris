@@ -16,40 +16,24 @@ import "./style.css";
 
 import "./observable.ts";
 import "./state.ts";
-import { Coordinate, Key, Event, Cube } from "./types.ts";
-import { createSquarePiece, mergeCoordinates, observeKey } from "./util.ts";
 import "./view.ts";
 
-import { Observable, fromEvent, interval, merge } from "rxjs";
-import { map, filter, scan } from "rxjs/operators";
-import { State, initialState, tick } from "./state.ts";
-import { createSvgElement, moveSvgElement, show, hide, render } from "./view.ts";
+import { merge } from "rxjs";
+import { scan } from "rxjs/operators";
+import { initialState, tick } from "./state.ts";
 import {
-  initial_coords as INITIAL_COORDS,
-  moveCubeSubscription,
-  movePieceSubscription,
+  initialiseView,
+} from "./view.ts";
+import {
+  moveAllDirections$,
   tick$,
 } from "./observable.ts";
+import { State } from "./types.ts";
+
+export {INITIAL_ID}
 
 /** ==================== Constants ==================== **/
-export const Viewport = {
-  CANVAS_WIDTH: 200,
-  CANVAS_HEIGHT: 400,
-  PREVIEW_WIDTH: 160,
-  PREVIEW_HEIGHT: 80,
-} as const;
 
-export const Constants = {
-  TICK_RATE_MS: 1000,
-  GRID_WIDTH: 10,
-  GRID_HEIGHT: 20,
-  MOVE_BY: 20,
-} as const;
-
-export const Block = {
-  WIDTH: Viewport.CANVAS_WIDTH / Constants.GRID_WIDTH,
-  HEIGHT: Viewport.CANVAS_HEIGHT / Constants.GRID_HEIGHT,
-};
 
 const INITIAL_ID = "1";
 
@@ -59,47 +43,11 @@ const INITIAL_ID = "1";
  * should be called here.
  */
 export function main() {
-  /** ==================== Canvas Elements ==================== **/
-  const svg = document.querySelector("#svgCanvas") as SVGGraphicsElement &
-    HTMLElement;
-  const preview = document.querySelector("#svgPreview") as SVGGraphicsElement &
-    HTMLElement;
-  const gameover = document.querySelector("#gameOver") as SVGGraphicsElement &
-    HTMLElement;
-  const container = document.querySelector("#main") as HTMLElement;
+  initialiseView();
 
-  svg.setAttribute("height", `${Viewport.CANVAS_HEIGHT}`);
-  svg.setAttribute("width", `${Viewport.CANVAS_WIDTH}`);
-  preview.setAttribute("height", `${Viewport.PREVIEW_HEIGHT}`);
-  preview.setAttribute("width", `${Viewport.PREVIEW_WIDTH}`);
-
-  /** ==================== Text Fields ==================== **/
-  const levelText = document.querySelector("#levelText") as HTMLElement;
-  const scoreText = document.querySelector("#scoreText") as HTMLElement;
-  const highScoreText = document.querySelector("#highScoreText") as HTMLElement;
-
-  /** ==================== Rendering ==================== **/
-  // const testPiece = createSquarePiece(svg, INITIAL_COORDS);
-  const previewPiece = createSquarePiece(preview, { x: 60, y: 20 });
-  // const testPieceSubscription = movePieceSubscription(testPiece);
-
-
-
-  const source$ = merge(tick$)
-    .pipe(
-      scan((s: State) => tick(s), {
-        ...initialState,
-        currentPiece: createSquarePiece(svg, INITIAL_COORDS),
-      })
-    )
+  const source$ = merge(tick$, moveAllDirections$)
+    .pipe(scan((s: State) => tick(s), initialState))
     .subscribe((s: State) => {
-      render(s);
-
-      if (s.gameEnd) {
-        show(gameover);
-      } else {
-        hide(gameover);
-      }
     });
 }
 

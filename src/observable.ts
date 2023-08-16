@@ -1,46 +1,59 @@
-import { merge, scan, interval, filter, fromEvent } from "rxjs";
-import { Coordinate, Cube, Key, Move, Piece } from "./types";
-import { observeKey, mergeCoordinates } from "./util";
-import { Constants } from "./main";
-import { moveSvgElement } from "./view";
+import { merge, interval, filter, fromEvent, map } from "rxjs";
+import { Constants, Key, Move } from "./types";
+import { observeKey } from "./util";
 
-const key$ = fromEvent<KeyboardEvent>(document, "keypress");
+export {
+  key$,
+  tick$,
+  fromKey,
+  moveAllDirections$,
+  moveDown$,
+  moveLeft$,
+  moveRight$,
+  autoMoveDown$,
+};
 
 const fromKey = (keyCode: Key) =>
   key$.pipe(filter(({ code }) => code === keyCode));
 
-export const initial_coords = <Coordinate>{ x: 0, y: 0 };
 
-// Coordinate objects to utilise when moving in each direction.
-export const moveLeftCoord = <Coordinate>{ x: -1 * Constants.MOVE_BY, y: 0 },
-  moveRightCoord = <Coordinate>{ x: Constants.MOVE_BY, y: 0 },
-  moveDownCoord = <Coordinate>{ x: 0, y: Constants.MOVE_BY };
+
+// All keypresses
+const key$ = fromEvent<KeyboardEvent>(document, "keypress");
+
+// Game tickrate
+const tick$ = interval(Constants.TICK_RATE_MS);
 
 /** Create an Observable for each movement direction */
-export const moveLeft$ = observeKey("keydown", "KeyA", () => moveLeftCoord),
-  moveRight$ = observeKey("keydown", "KeyD", () => moveRightCoord),
-  moveDown$ = observeKey("keydown", "KeyS", () => moveDownCoord);
+const moveLeft$ = observeKey(
+    "keydown",
+    "KeyA",
+    () => new Move(-1 * Constants.MOVE_BY, 0)
+  ),
+  moveRight$ = observeKey(
+    "keydown",
+    "KeyD",
+    () => new Move(Constants.MOVE_BY, 0)
+  ),
+  moveDown$ = observeKey(
+    "keydown",
+    "KeyS",
+    () => new Move(0, Constants.MOVE_BY)
+  ),
+  autoMoveDown$ = tick$.pipe(map((_) => new Move(0, Constants.MOVE_BY)));
 
 /** Main movement stream */
-export const moveInputStream$ = merge(moveLeft$, moveRight$, moveDown$);
+const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$); //, autoMoveDown$);
 
 /** Returns a subscription to move a given Cube object */
-export const moveCubeSubscription = (cube: Cube) =>
-  moveInputStream$
-    .pipe(
-      scan(
-        (accum: Coordinate, val: Coordinate) => mergeCoordinates(accum, val),
-        cube.position
-      )
-    )
-    .subscribe(moveSvgElement(cube.svgElement));
-
-/** Returns a subscription to move an entire Piece object */
-export const movePieceSubscription = (piece?: Piece) =>
-  piece ? piece.cubes.map(moveCubeSubscription): null;
-
-
-/** Determines the rate of time steps */
-export const tick$ = interval(Constants.TICK_RATE_MS);
-
-
+// export const moveCube$ = (cube: Cube) =>
+//   moveAllDirections$.pipe(
+//     scan(
+//       (accum: Coordinate, val: Coordinate) => mergeCoordinates(accum, val),
+//       cube.position
+//     ),
+//     takeWhile(
+//       (c: Coordinate) => c.y <= Viewport.CANVAS_HEIGHT - Constants.MOVE_BY
+//     )
+//   );
+// .subscribe(moveSvgElement(cube.svgElement));

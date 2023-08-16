@@ -1,44 +1,41 @@
-import { Subscription } from "rxjs";
-import { movePieceSubscription } from "./observable";
-import { Cube, Piece } from "./types";
-import { createSquarePiece } from "./util";
+import { INITIAL_ID } from "./main";
+import { Cube, INITIAL_COORDS, Move, State } from "./types";
 
-export type State = Readonly<{
-  gameEnd: boolean;
-  currentPiece?: Piece;
-  subscriptionState: SubscriptionState;
-  pieces: ReadonlyArray<Piece>;
-  exit: ReadonlyArray<Piece>;
-}>;
+export { tick, initialState };
 
-export type SubscriptionState = Readonly<{
-  subscribed: boolean,
-  subscription?: Subscription[] | null
-}>
 
-export const initialState: State = {
-  gameEnd: false,
-  subscriptionState: {subscribed: false},
-  pieces: [],
-  exit: [],
-} as const;
+/////////////// INITIAL STATE ////////////////////
+const initialCubes: Cube[] = [
+    new Cube(INITIAL_ID, INITIAL_COORDS),
+    new Cube(INITIAL_ID + 1, new Move(INITIAL_COORDS.x + 20, INITIAL_COORDS.y)),
+    new Cube(INITIAL_ID + 2, new Move(INITIAL_COORDS.x, INITIAL_COORDS.y + 20)),
+    new Cube(INITIAL_ID + 3, new Move(INITIAL_COORDS.x + 20, INITIAL_COORDS.y + 20))
+  ]
 
-/**
- * Updates the state by proceeding with one time step.
- *
- * @param s Current state
- * @returns Updated state
- */
-export const tick = (s: State) => {
-  if (!s.subscriptionState.subscribed) {
-    const currentPieceSubscriptionState: SubscriptionState = {
-      subscribed: true,
-      subscription: movePieceSubscription(s.currentPiece)
-    }
-    return <State>{
-      ...s,
-      subscriptionState: currentPieceSubscriptionState
-    }
+const initialState: State = {
+    gameEnd: false,
+    id: 0,
+    piece: initialCubes,
+    cubes: [],
+    exit: []
+  } as const
+
+
+//////////////// STATE UPDATES //////////////////////
+const handleCollisions = (s: State): State => {
+  return {
+    ...s
   }
-  return s;
-};
+}
+
+const tick = (s: State): State => {
+  return {
+    ...s
+  }
+}
+
+const reduceState = (s: State): State => {
+  return {
+    ...s
+  }
+}
