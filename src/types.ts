@@ -1,4 +1,3 @@
-
 export type { Key, Event, State };
 export { Cube, Move, Viewport, Constants, Block, INITIAL_COORDS };
 
@@ -29,8 +28,8 @@ type Event = "keydown" | "keyup" | "keypress";
 
 type State = Readonly<{
   gameEnd: boolean;
-  id: number,
-  piece: ReadonlyArray<Cube>
+  id: number;
+  piece: ReadonlyArray<Cube>;
   cubes: ReadonlyArray<Cube>;
   exit: ReadonlyArray<Cube>;
 }>;
@@ -41,8 +40,5 @@ class Move {
 }
 
 class Cube {
-  constructor(
-    public readonly id: string,
-    public readonly pos: Move,
-  ) {}
+  constructor(public readonly id: string, public readonly pos: Move, public readonly colour: string) {}
 }

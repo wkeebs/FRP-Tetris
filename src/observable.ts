@@ -16,8 +16,6 @@ export {
 const fromKey = (keyCode: Key) =>
   key$.pipe(filter(({ code }) => code === keyCode));
 
-
-
 // All keypresses
 const key$ = fromEvent<KeyboardEvent>(document, "keypress");
 
@@ -43,17 +41,4 @@ const moveLeft$ = observeKey(
   autoMoveDown$ = tick$.pipe(map((_) => new Move(0, Constants.MOVE_BY)));
 
 /** Main movement stream */
-const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$); //, autoMoveDown$);
-
-/** Returns a subscription to move a given Cube object */
-// export const moveCube$ = (cube: Cube) =>
-//   moveAllDirections$.pipe(
-//     scan(
-//       (accum: Coordinate, val: Coordinate) => mergeCoordinates(accum, val),
-//       cube.position
-//     ),
-//     takeWhile(
-//       (c: Coordinate) => c.y <= Viewport.CANVAS_HEIGHT - Constants.MOVE_BY
-//     )
-//   );
-// .subscribe(moveSvgElement(cube.svgElement));
+const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$, autoMoveDown$);

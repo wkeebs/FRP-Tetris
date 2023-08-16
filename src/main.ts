@@ -18,24 +18,11 @@ import "./observable.ts";
 import "./state.ts";
 import "./view.ts";
 
-import { merge } from "rxjs";
+import { Subscription, merge } from "rxjs";
 import { scan } from "rxjs/operators";
-import { initialState, tick } from "./state.ts";
-import {
-  initialiseView,
-} from "./view.ts";
-import {
-  moveAllDirections$,
-  tick$,
-} from "./observable.ts";
-import { State } from "./types.ts";
-
-export {INITIAL_ID}
-
-/** ==================== Constants ==================== **/
-
-
-const INITIAL_ID = "1";
+import { initialState, reduceState, tick } from "./state.ts";
+import { initialiseView, updateView } from "./view.ts";
+import { moveAllDirections$, tick$ } from "./observable.ts";
 
 /** ==================== MAIN LOOP ==================== **/
 /**
@@ -45,10 +32,10 @@ const INITIAL_ID = "1";
 export function main() {
   initialiseView();
 
-  const source$ = merge(tick$, moveAllDirections$)
-    .pipe(scan((s: State) => tick(s), initialState))
-    .subscribe((s: State) => {
-    });
+  const subscription: Subscription = 
+    merge(tick$, moveAllDirections$)
+    .pipe(scan(reduceState, initialState))
+    .subscribe(updateView(() => subscription.unsubscribe()));
 }
 
 // The following simply runs your main function on window load.  Make sure to leave it in place.

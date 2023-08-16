@@ -1,9 +1,9 @@
 import { Observable, fromEvent } from "rxjs";
 import { map, filter } from "rxjs/operators";
 
-import { Key, Event} from "./types.ts";
+import { Key, Event } from "./types.ts";
 
-export { observeKey, RNG, isNotNullOrUndefined}
+export { observeKey, RNG, isNotNullOrUndefined, attr };
 
 /**
  * Creates an Observable object for a given event.
@@ -37,7 +37,7 @@ abstract class RNG {
 
   /**
    * Call `hash` repeatedly to generate the sequence of hashes.
-   * @param seed 
+   * @param seed
    * @returns a hash of the seed
    */
   public static hash = (seed: number) => (RNG.a * seed + RNG.c) % RNG.m;
@@ -48,10 +48,19 @@ h    * Takes hash value and scales it to the range [-1, 1]
   public static scale = (hash: number) => (2 * hash) / (RNG.m - 1) - 1;
 }
 
+  /**
+   * set a number of attributes on an Element at once
+   * @param e the Element
+   * @param o a property bag
+   */
+const attr = (e: Element, o: { [p: string]: unknown }) => { for (const k in o) e.setAttribute(k, String(o[k])) }
+
 /**
  * Type guard for use in filters
  * @param input something that might be null or undefined
  */
-function isNotNullOrUndefined<T extends object>(input: null | undefined | T): input is T {
+function isNotNullOrUndefined<T extends object>(
+  input: null | undefined | T
+): input is T {
   return input != null;
 }

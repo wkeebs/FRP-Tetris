@@ -1,8 +1,7 @@
+import { Block, Cube, Move, State, Viewport } from "./types";
+import { attr, isNotNullOrUndefined } from "./util";
 
-import { Cube, Move, State, Viewport } from "./types";
-import { isNotNullOrUndefined } from "./util";
-
-export { initialiseView, updateView }
+export { initialiseView, updateView };
 
 /**
  * Creates an SVG element with the given properties.
@@ -83,10 +82,33 @@ const updateView =
     // Text fields
     const levelText = document.querySelector("#levelText") as HTMLElement;
     const scoreText = document.querySelector("#scoreText") as HTMLElement;
-    const highScoreText = document.querySelector("#highScoreText") as HTMLElement;
-
+    const highScoreText = document.querySelector(
+      "#highScoreText"
+      ) as HTMLElement;
+      
     // if elements are null, exit function early
-    if (!svg || preview) return;
+      if (!svg || preview) return;
+
+    // Update positions
+    const updateCubeView = (root: HTMLElement) => (cube: Cube) => {
+      const createCube = () => {
+        const c = createSvgElement(root.namespaceURI, "rect", {
+          height: `${Block.HEIGHT}`,
+          width: `${Block.WIDTH}`,
+          x: `${Block.WIDTH * 2}`,
+          y: `${Block.HEIGHT}`,
+          style: `fill: ${cube.colour}`,
+        });
+        root.appendChild(c);
+        console.log("DONE")
+        return c;
+      }
+      const c = document.getElementById(cube.id) || createCube();
+      attr(c, {id: cube.id, pos: cube.pos, colour: cube.colour});
+
+    };
+    s.cubes.forEach(updateCubeView(svg));
+    s.piece.forEach(updateCubeView(svg));
 
     // remove all cubes that need to be deleted
     s.exit
