@@ -69,6 +69,6 @@ const reduceState = (s: State, action: Move | number): State =>
   action instanceof Move
     ? {
         ...s,
-        piece: s.piece.map(updateId).map(moveCube(action)),
+        piece: s.piece.map(moveCube(action)),
       }
     : tick(s);
