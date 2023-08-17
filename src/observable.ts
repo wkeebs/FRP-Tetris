@@ -41,4 +41,4 @@ const moveLeft$ = observeKey(
   autoMoveDown$ = tick$.pipe(map((_) => new Move(0, Constants.MOVE_BY)));
 
 /** Main movement stream */
-const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$, autoMoveDown$);
+const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$) //, autoMoveDown$);

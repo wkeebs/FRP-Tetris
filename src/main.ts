@@ -23,6 +23,7 @@ import { scan } from "rxjs/operators";
 import { initialState, reduceState, tick } from "./state.ts";
 import { initialiseView, updateView } from "./view.ts";
 import { moveAllDirections$, tick$ } from "./observable.ts";
+import { State } from "./types.ts";
 
 /** ==================== MAIN LOOP ==================== **/
 /**
@@ -33,7 +34,7 @@ export function main() {
   initialiseView();
 
   const subscription: Subscription = 
-    merge(tick$, moveAllDirections$)
+    merge(moveAllDirections$) //$tick
     .pipe(scan(reduceState, initialState))
     .subscribe(updateView(() => subscription.unsubscribe()));
 }

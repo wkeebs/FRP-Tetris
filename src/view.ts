@@ -84,35 +84,39 @@ const updateView =
     const scoreText = document.querySelector("#scoreText") as HTMLElement;
     const highScoreText = document.querySelector(
       "#highScoreText"
-      ) as HTMLElement;
-      
+    ) as HTMLElement;
+
     // if elements are null, exit function early
-      if (!svg || preview) return;
+    if (!svg || !preview) return;
 
     // Update positions
     const updateCubeView = (root: HTMLElement) => (cube: Cube) => {
-      const createCube = () => {
+      const cubeElement = document.getElementById(String(cube.id));
+      console.log(cubeElement)
+      if (cubeElement) {
+        cubeElement.setAttribute("x", String(cube.x));
+        cubeElement.setAttribute("y", String(cube.y));
+        // console.log(`Cube found at ${cube.x}, ${cube.y}`)
+      } else {
         const c = createSvgElement(root.namespaceURI, "rect", {
           height: `${Block.HEIGHT}`,
           width: `${Block.WIDTH}`,
-          x: `${Block.WIDTH * 2}`,
-          y: `${Block.HEIGHT}`,
+          x: `${cube.x}`,
+          y: `${cube.y}`,
           style: `fill: ${cube.colour}`,
         });
+        c.setAttribute('id', String(cube.id));
         root.appendChild(c);
-        console.log("DONE")
-        return c;
+        // console.log(`New cube added at ${cube.x}, ${cube.y}`)
       }
-      const c = document.getElementById(cube.id) || createCube();
-      attr(c, {id: cube.id, pos: cube.pos, colour: cube.colour});
-
     };
+    
     s.cubes.forEach(updateCubeView(svg));
     s.piece.forEach(updateCubeView(svg));
 
     // remove all cubes that need to be deleted
     s.exit
-      .map((c) => document.getElementById(c.id))
+      .map((cube) => document.getElementById(String(cube.id)))
       .filter(isNotNullOrUndefined)
       .forEach((v) => {
         try {
