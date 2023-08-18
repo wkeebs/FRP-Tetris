@@ -1,6 +1,7 @@
 import { merge, interval, filter, fromEvent, map } from "rxjs";
-import { Constants, Key, Move } from "./types";
+import { Constants, Key} from "./types";
 import { observeKey } from "./util";
+import { Move, Tick } from "./state";
 
 export {
   key$,
@@ -20,7 +21,9 @@ const fromKey = (keyCode: Key) =>
 const key$ = fromEvent<KeyboardEvent>(document, "keypress");
 
 // Game tickrate
-const tick$ = interval(Constants.TICK_RATE_MS);
+const tick$ = interval(Constants.TICK_RATE_MS).pipe(
+  map((elapsed) => new Tick(elapsed))
+);
 
 /** Create an Observable for each movement direction */
 const moveLeft$ = observeKey(
@@ -41,4 +44,4 @@ const moveLeft$ = observeKey(
   autoMoveDown$ = tick$.pipe(map((_) => new Move(0, Constants.MOVE_BY)));
 
 /** Main movement stream */
-const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$, autoMoveDown$);
+const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$);

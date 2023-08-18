@@ -1,5 +1,5 @@
-export type { Key, Event, State, Cube };
-export { Move, Viewport, Constants, Block, INITIAL_COORDS };
+export type { Key, Event, State, Cube, Action };
+export { Viewport, Constants, Block};
 
 const Viewport = {
   CANVAS_WIDTH: 200,
@@ -20,8 +20,6 @@ const Block = {
   HEIGHT: Viewport.CANVAS_HEIGHT / Constants.GRID_HEIGHT,
 };
 
-const INITIAL_COORDS = { x: 60, y: 0 };
-
 type Key = "KeyS" | "KeyA" | "KeyD";
 
 type Event = "keydown" | "keyup" | "keypress";
@@ -34,14 +32,17 @@ type State = Readonly<{
   exit: ReadonlyArray<Cube>;
 }>;
 
-// Action Type
-class Move {
-  constructor(public readonly x: number, public readonly y: number) {}
-}
-
 type Cube = Readonly<{
   id: number;
   x: number;
   y: number;
   colour: string;
 }>;
+
+// Action Type
+/**
+ * Actions modify state
+ */
+interface Action {
+  apply(s: State): State;
+}

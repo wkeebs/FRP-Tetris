@@ -1,4 +1,5 @@
-import { Block, Cube, Move, State, Viewport } from "./types";
+import { Move } from "./state";
+import { Block, Cube, State, Viewport } from "./types";
 import { attr, isNotNullOrUndefined } from "./util";
 
 export { initialiseView, updateView };
@@ -92,11 +93,9 @@ const updateView =
     // Update positions
     const updateCubeView = (root: HTMLElement) => (cube: Cube) => {
       const cubeElement = document.getElementById(String(cube.id));
-      console.log(cubeElement)
       if (cubeElement) {
         cubeElement.setAttribute("x", String(cube.x));
         cubeElement.setAttribute("y", String(cube.y));
-        // console.log(`Cube found at ${cube.x}, ${cube.y}`)
       } else {
         const c = createSvgElement(root.namespaceURI, "rect", {
           height: `${Block.HEIGHT}`,
@@ -107,10 +106,8 @@ const updateView =
         });
         c.setAttribute('id', String(cube.id));
         root.appendChild(c);
-        // console.log(`New cube added at ${cube.x}, ${cube.y}`)
       }
     };
-    
     s.cubes.forEach(updateCubeView(svg));
     s.piece.forEach(updateCubeView(svg));
 
