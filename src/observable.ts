@@ -29,19 +29,19 @@ const tick$ = interval(Constants.TICK_RATE_MS).pipe(
 const moveLeft$ = observeKey(
     "keydown",
     "KeyA",
-    () => new Move(-1 * Constants.MOVE_BY, 0)
+    () => new Move(-1 * Constants.CUBE_SIZE_PX, 0)
   ),
   moveRight$ = observeKey(
     "keydown",
     "KeyD",
-    () => new Move(Constants.MOVE_BY, 0)
+    () => new Move(Constants.CUBE_SIZE_PX, 0)
   ),
   moveDown$ = observeKey(
     "keydown",
     "KeyS",
-    () => new Move(0, Constants.MOVE_BY)
+    () => new Move(0, Constants.CUBE_SIZE_PX)
   ),
-  autoMoveDown$ = tick$.pipe(map((_) => new Move(0, Constants.MOVE_BY)));
+  autoMoveDown$ = tick$.pipe(map((_) => new Move(0, Constants.CUBE_SIZE_PX)));
 
 /** Main movement stream */
 const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$);

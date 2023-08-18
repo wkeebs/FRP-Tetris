@@ -41,9 +41,34 @@ const initialState: State = {
   exit: [],
 } as const;
 
+const nextPiece = (s: State): ReadonlyArray<Cube> => {
+  return squarePiece(s);
+};
+
+const collidedX = (a: Cube, b: Cube) => {
+  if (a.y === b.y) {
+    // if a is on the left
+    if (a.x < b.x) {
+      return a.x === b.x - Constants.CUBE_SIZE_PX;
+    } else {
+      return b.x === a.x - Constants.CUBE_SIZE_PX;
+    }
+  }
+  return false;
+};
+
+// a.y === b.y &&
+//   (a.x === b.x - Constants.CUBE_SIZE_PX ||
+//     a.x - Constants.CUBE_SIZE_PX === b.x);
+
+const collidedY = (a: Cube, b: Cube) =>
+  a.x === b.x &&
+  (a.y === b.y + Constants.CUBE_SIZE_PX ||
+    a.y + Constants.CUBE_SIZE_PX === b.y);
+
 //////////////// ACTION CLASSES //////////////////////
 /**
- * 
+ *
  */
 class Move implements Action {
   constructor(public readonly x: number, public readonly y: number) {}
@@ -55,18 +80,19 @@ class Move implements Action {
   apply = (s: State): State => {
     // True if any of the piece is at the rightmost limit of the board.
     const atRight = s.piece.some(
-      (c: Cube) => c.x + this.x > Viewport.CANVAS_WIDTH - Constants.MOVE_BY
+      (c: Cube) => c.x + this.x > Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX
     );
     // True if any of the piece is at the leftmost limit of the board.
-    const atLeft = s.piece.some(
-      (c: Cube) => c.x + this.x < 0
+    const atLeft = s.piece.some((c: Cube) => c.x + this.x < 0);
+    const pieceCollidedX = s.piece.some((p) =>
+      s.cubes.some((c) => collidedX(p, c))
     );
     return handleCollisions({
       ...s,
       piece:
-        atRight || atLeft
-          ? s.piece :
-          s.piece.map((cube: Cube) => {
+        atRight || atLeft || pieceCollidedX
+          ? s.piece
+          : s.piece.map((cube: Cube) => {
               return {
                 ...cube,
                 x: cube.x + this.x,
@@ -86,12 +112,48 @@ class AddPiece implements Action {
   };
 }
 
+const squarePiece = (s: State): ReadonlyArray<Cube> => {
+  return [
+    <Cube>{
+      id: s.currentId + 1,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y,
+      colour: "green",
+    },
+    <Cube>{
+      id: s.currentId + 2,
+      x: INITIAL_COORDS.x + 20,
+      y: INITIAL_COORDS.y,
+      colour: "green",
+    },
+    <Cube>{
+      id: s.currentId + 3,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y + 20,
+      colour: "green",
+    },
+    <Cube>{
+      id: s.currentId + 4,
+      x: INITIAL_COORDS.x + 20,
+      y: INITIAL_COORDS.y + 20,
+      colour: "green",
+    },
+  ];
+};
+
 class Tick implements Action {
   constructor(public readonly elapsed: number) {}
   apply = (s: State): State => {
-    return handleCollisions({
-      ...s,
-    });
+    return s.piece.length === 0
+      ? {
+          ...s,
+          currentId: s.currentId + Constants.PIECE_SIZE,
+          piece: nextPiece({
+            ...s,
+            currentId: s.currentId + Constants.PIECE_SIZE,
+          }),
+        }
+      : s;
   };
 }
 
@@ -100,18 +162,19 @@ class Tick implements Action {
 const handleCollisions = (s: State): State => {
   // Is a cube at the bottom?
   const hitBottom = (c: Cube) =>
-  c.y >= Viewport.CANVAS_HEIGHT - Constants.MOVE_BY;
-  
+    c.y >= Viewport.CANVAS_HEIGHT - Constants.CUBE_SIZE_PX;
+
   // True if the any part of piece is at the bottom of the board.
-  const pieceAtBottom = s.piece.some(hitBottom);
+  const pieceCollidedY = s.piece.some((p) =>
+    s.cubes.some((c) => collidedY(p, c))
+  );
+  const pieceHitBottom = s.piece.some(hitBottom);
 
   return {
     ...s,
-    piece: pieceAtBottom ? [] : s.piece,
-    cubes: pieceAtBottom ? s.cubes.concat(s.piece) : s.cubes,
+    piece: pieceHitBottom || pieceCollidedY ? [] : s.piece,
+    cubes: pieceHitBottom || pieceCollidedY ? s.cubes.concat(s.piece) : s.cubes,
   };
 };
-
-const updateId = (c: Cube): Cube => <Cube>{ ...c, id: Number(c.id) + 4 };
 
 const reduceState = (s: State, action: Action) => action.apply(s);

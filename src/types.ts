@@ -12,7 +12,8 @@ const Constants = {
   TICK_RATE_MS: 1000,
   GRID_WIDTH: 10,
   GRID_HEIGHT: 20,
-  MOVE_BY: 20,
+  CUBE_SIZE_PX: 20,
+  PIECE_SIZE: 4
 } as const;
 
 const Block = {
