@@ -13,7 +13,8 @@ const Constants = {
   GRID_WIDTH: 10,
   GRID_HEIGHT: 20,
   CUBE_SIZE_PX: 20,
-  PIECE_SIZE: 4
+  PIECE_SIZE: 4,
+  ROW_WIDTH: 10
 } as const;
 
 const Block = {

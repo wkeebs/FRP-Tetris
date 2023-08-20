@@ -182,11 +182,20 @@ class Tick implements Action {
   static removeFullRows = (s: State): State => {
     // Checks if a row that contains a given cube is full, based on cube height
     const checkRow = (cube: Cube) =>
-      s.cubes.filter((c) => c.y === cube.y).length ===
-      Viewport.CANVAS_WIDTH / Constants.CUBE_SIZE_PX;
+      s.cubes.filter((c) => c.y === cube.y).length === Constants.ROW_WIDTH;
 
-    const exitCubes = s.cubes.filter(checkRow);
-    const newCubes = difference(s.cubes)(exitCubes);
+    const exitCubes = s.cubes.filter(checkRow); // All cubes in a full row
+    
+    // All cubes that aren't removed - we move them down if rows are removed.
+    // The distance to move down is calculated by the number of rows
+    // to be removed (exitCubes length // row width) * cube size
+    const newCubes = difference(s.cubes)(exitCubes)
+      .map((c) =>
+        <Cube>{
+          ...c,
+          y: c.y + (Math.floor(exitCubes.length / Constants.ROW_WIDTH) * Constants.CUBE_SIZE_PX),
+        }
+    );
     return {
       ...s,
       cubes: newCubes,
