@@ -45,23 +45,14 @@ const nextPiece = (s: State): ReadonlyArray<Cube> => {
   return squarePiece(s);
 };
 
-const collidedX = (a: Cube, b: Cube) => {
-  if (a.y === b.y) {
-    // if a is on the left
-    if (a.x < b.x) {
-      return a.x === b.x - Constants.CUBE_SIZE_PX;
-    } else {
-      return b.x === a.x - Constants.CUBE_SIZE_PX;
-    }
-  }
-  return false;
-};
+const collidedX = (a: Cube) => (b: Cube) =>
+  a.y === b.y // if vertically aligned
+    ? a.x < b.x
+      ? a.x === b.x - Constants.CUBE_SIZE_PX // if a on the left
+      : b.x === a.x - Constants.CUBE_SIZE_PX // if b on the left
+    : false;
 
-// a.y === b.y &&
-//   (a.x === b.x - Constants.CUBE_SIZE_PX ||
-//     a.x - Constants.CUBE_SIZE_PX === b.x);
-
-const collidedY = (a: Cube, b: Cube) =>
+const collidedY = (a: Cube) => (b: Cube) =>
   a.x === b.x &&
   (a.y === b.y + Constants.CUBE_SIZE_PX ||
     a.y + Constants.CUBE_SIZE_PX === b.y);
@@ -78,20 +69,26 @@ class Move implements Action {
    * @returns The new state.
    */
   apply = (s: State): State => {
-    // True if any of the piece is at the rightmost limit of the board.
+    // Has the piece collided with the right side of the board?
     const atRight = s.piece.some(
       (c: Cube) => c.x + this.x > Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX
     );
-    // True if any of the piece is at the leftmost limit of the board.
+    // Has the piece collided with the left side of the board?
     const atLeft = s.piece.some((c: Cube) => c.x + this.x < 0);
-    const pieceCollidedX = s.piece.some((p) =>
-      s.cubes.some((c) => collidedX(p, c))
-    );
+    // Has the piece collided with another cube?
+    const pieceCollidedX = s.piece.some((c) => s.cubes.some(collidedX(c)));
+    if (pieceCollidedX || atLeft || atRight) console.log("Collided on X");
     return handleCollisions({
       ...s,
       piece:
-        atRight || atLeft || pieceCollidedX
-          ? s.piece
+        pieceCollidedX || atLeft || atRight
+          ? s.piece.map((cube: Cube) => {
+              return {
+                ...cube,
+                x: cube.x,
+                y: cube.y + this.y,
+              };
+            })
           : s.piece.map((cube: Cube) => {
               return {
                 ...cube,
@@ -165,15 +162,15 @@ const handleCollisions = (s: State): State => {
     c.y >= Viewport.CANVAS_HEIGHT - Constants.CUBE_SIZE_PX;
 
   // True if the any part of piece is at the bottom of the board.
-  const pieceCollidedY = s.piece.some((p) =>
-    s.cubes.some((c) => collidedY(p, c))
-  );
+  const pieceCollidedY = s.piece.some((c) => s.cubes.some(collidedY(c)));
   const pieceHitBottom = s.piece.some(hitBottom);
+  const verticalCollision = pieceHitBottom || pieceCollidedY;
+  if (verticalCollision) console.log("Collided on Y");
 
   return {
     ...s,
-    piece: pieceHitBottom || pieceCollidedY ? [] : s.piece,
-    cubes: pieceHitBottom || pieceCollidedY ? s.cubes.concat(s.piece) : s.cubes,
+    piece: verticalCollision ? [] : s.piece,
+    cubes: verticalCollision ? s.cubes.concat(s.piece) : s.cubes,
   };
 };
 
