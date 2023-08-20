@@ -1,9 +1,9 @@
 import { Observable, fromEvent } from "rxjs";
 import { map, filter } from "rxjs/operators";
 
-import { Key, Event } from "./types.ts";
+import { Key, Event, Cube } from "./types.ts";
 
-export { observeKey, RNG, isNotNullOrUndefined, attr };
+export { observeKey, RNG, isNotNullOrUndefined, attr, difference };
 
 /**
  * Creates an Observable object for a given event.
@@ -54,7 +54,7 @@ h    * Takes hash value and scales it to the range [-1, 1]
    * @param o a property bag
    */
 const attr = (e: Element, o: { [p: string]: unknown }) => { for (const k in o) e.setAttribute(k, String(o[k])) }
-
+const difference = (a: ReadonlyArray<Cube>) => (b: ReadonlyArray<Cube>) => a.filter(x => !b.includes(x));
 /**
  * Type guard for use in filters
  * @param input something that might be null or undefined

@@ -1,4 +1,5 @@
 import { Action, Constants, Cube, State, Viewport } from "./types";
+import { difference } from "./util";
 
 export { initialState, reduceState, Move, AddPiece, Tick };
 
@@ -140,8 +141,10 @@ const squarePiece = (s: State): ReadonlyArray<Cube> => {
 
 class Tick implements Action {
   constructor(public readonly elapsed: number) {}
-  apply = (s: State): State => {
-    return s.piece.length === 0
+  apply = (s: State): State => Tick.incrementIds(Tick.removeFullRows(s));
+
+  static incrementIds = (s: State): State =>
+    s.piece.length === 0
       ? {
           ...s,
           currentId: s.currentId + Constants.PIECE_SIZE,
@@ -151,6 +154,20 @@ class Tick implements Action {
           }),
         }
       : s;
+
+  static removeFullRows = (s: State): State => {
+    // Checks if a row that contains a given cube is full, based on cube height
+    const checkRow = (cube: Cube) =>
+      s.cubes.filter((c) => c.y === cube.y).length ===
+      Viewport.CANVAS_WIDTH / Constants.CUBE_SIZE_PX;
+
+    const exitCubes = s.cubes.filter(checkRow);
+    const newCubes = difference(s.cubes)(exitCubes)
+    return {
+      ...s,
+      cubes: newCubes,
+      exit: exitCubes,
+    };
   };
 }
 
