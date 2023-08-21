@@ -47,10 +47,6 @@ const initialState: State = {
   score: 0,
 } as const;
 
-const nextPiece = (s: State): ReadonlyArray<Cube> => {
-  return createZ(s);
-};
-
 const collidedX = (a: Cube) => (b: Cube) =>
   a.y === b.y // if vertically aligned
     ? a.x < b.x
@@ -166,13 +162,13 @@ const createI = (s: State): ReadonlyArray<Cube> => {
     <Cube>{
       id: s.currentId + 3,
       x: INITIAL_COORDS.x,
-      y: INITIAL_COORDS.y + 2*Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + 2 * Constants.CUBE_SIZE_PX,
       colour: "cyan",
     },
     <Cube>{
       id: s.currentId + 4,
       x: INITIAL_COORDS.x,
-      y: INITIAL_COORDS.y + 3*Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + 3 * Constants.CUBE_SIZE_PX,
       colour: "cyan",
     },
   ];
@@ -200,7 +196,7 @@ const createJ = (s: State): ReadonlyArray<Cube> => {
     },
     <Cube>{
       id: s.currentId + 4,
-      x: INITIAL_COORDS.x + 2*Constants.CUBE_SIZE_PX,
+      x: INITIAL_COORDS.x + 2 * Constants.CUBE_SIZE_PX,
       y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
       colour: "blue",
     },
@@ -287,7 +283,7 @@ const createS = (s: State): ReadonlyArray<Cube> => {
     },
     <Cube>{
       id: s.currentId + 4,
-      x: INITIAL_COORDS.x + 2*Constants.CUBE_SIZE_PX,
+      x: INITIAL_COORDS.x + 2 * Constants.CUBE_SIZE_PX,
       y: INITIAL_COORDS.y,
       colour: "green",
     },
@@ -316,7 +312,7 @@ const createT = (s: State): ReadonlyArray<Cube> => {
     },
     <Cube>{
       id: s.currentId + 4,
-      x: INITIAL_COORDS.x + 2*Constants.CUBE_SIZE_PX,
+      x: INITIAL_COORDS.x + 2 * Constants.CUBE_SIZE_PX,
       y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
       colour: "purple",
     },
@@ -345,14 +341,25 @@ const createZ = (s: State): ReadonlyArray<Cube> => {
     },
     <Cube>{
       id: s.currentId + 4,
-      x: INITIAL_COORDS.x + 2*Constants.CUBE_SIZE_PX,
+      x: INITIAL_COORDS.x + 2 * Constants.CUBE_SIZE_PX,
       y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
       colour: "red",
     },
   ];
 };
 
+const createPieces = [
+  createI,
+  createJ,
+  createL,
+  createO,
+  createS,
+  createT,
+  createZ,
+];
 
+const nextPiece = (s: State): ReadonlyArray<Cube> =>
+  createPieces[RNG.hash(s.currentId) % createPieces.length](s);
 
 class Tick implements Action {
   constructor(public readonly elapsed: number) {}
