@@ -41,7 +41,7 @@ const moveLeft$ = observeKey(
     "KeyS",
     () => new Move(0, Constants.CUBE_SIZE_PX)
   ),
-  autoMoveDown$ = tick$.pipe(map((_) => new Move(0, Constants.CUBE_SIZE_PX)));
+  autoMoveDown$ = interval(Constants.FALL_RATE_MS).pipe(map((_) => new Move(0, Constants.CUBE_SIZE_PX)));
 
 /** Main movement stream */
 const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$);

@@ -123,9 +123,13 @@ const updateView =
         }
       });
 
+    // update score
+    scoreText.innerHTML = String(s.score);
+
     // game end
     if (s.gameEnd) {
       show(gameover);
+      onFinish();
     } else {
       hide(gameover);
     }

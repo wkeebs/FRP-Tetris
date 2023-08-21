@@ -1,5 +1,5 @@
 export type { Key, Event, State, Cube, Action };
-export { Viewport, Constants, Block};
+export { Viewport, Constants, Block };
 
 const Viewport = {
   CANVAS_WIDTH: 200,
@@ -9,12 +9,13 @@ const Viewport = {
 } as const;
 
 const Constants = {
-  TICK_RATE_MS: 1000,
+  TICK_RATE_MS: 100,
+  FALL_RATE_MS: 200,
   GRID_WIDTH: 10,
   GRID_HEIGHT: 20,
   CUBE_SIZE_PX: 20,
   PIECE_SIZE: 4,
-  ROW_WIDTH: 10
+  ROW_WIDTH: 10,
 } as const;
 
 const Block = {
@@ -32,6 +33,7 @@ type State = Readonly<{
   piece: ReadonlyArray<Cube>;
   cubes: ReadonlyArray<Cube>;
   exit: ReadonlyArray<Cube>;
+  score: number;
 }>;
 
 type Cube = Readonly<{

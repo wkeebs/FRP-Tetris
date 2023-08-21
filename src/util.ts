@@ -1,9 +1,15 @@
 import { Observable, fromEvent } from "rxjs";
-import { map, filter } from "rxjs/operators";
+import { map, filter, scan } from "rxjs/operators";
 
 import { Key, Event, Cube } from "./types.ts";
 
-export { observeKey, RNG, isNotNullOrUndefined, attr, difference };
+export {
+  observeKey,
+  RNG,
+  isNotNullOrUndefined,
+  attr,
+  difference
+};
 
 /**
  * Creates an Observable object for a given event.
@@ -43,18 +49,21 @@ abstract class RNG {
   public static hash = (seed: number) => (RNG.a * seed + RNG.c) % RNG.m;
 
   /**
-h    * Takes hash value and scales it to the range [-1, 1]
+   * Takes hash value and scales it to the range [-1, 1]
    */
   public static scale = (hash: number) => (2 * hash) / (RNG.m - 1) - 1;
 }
 
-  /**
-   * set a number of attributes on an Element at once
-   * @param e the Element
-   * @param o a property bag
-   */
-const attr = (e: Element, o: { [p: string]: unknown }) => { for (const k in o) e.setAttribute(k, String(o[k])) }
-const difference = (a: ReadonlyArray<Cube>) => (b: ReadonlyArray<Cube>) => a.filter(x => !b.includes(x));
+/**
+ * set a number of attributes on an Element at once
+ * @param e the Element
+ * @param o a property bag
+ */
+const attr = (e: Element, o: { [p: string]: unknown }) => {
+  for (const k in o) e.setAttribute(k, String(o[k]));
+};
+const difference = (a: ReadonlyArray<Cube>) => (b: ReadonlyArray<Cube>) =>
+  a.filter((x) => !b.includes(x));
 /**
  * Type guard for use in filters
  * @param input something that might be null or undefined

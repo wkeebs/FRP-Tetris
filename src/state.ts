@@ -1,49 +1,54 @@
 import { Action, Constants, Cube, State, Viewport } from "./types";
-import { difference } from "./util";
+import { RNG, difference } from "./util";
 
 export { initialState, reduceState, Move, AddPiece, Tick };
+
+const colours = ["cyan", "yellow", "purple", "green", "blue", "red", "orange"];
+const getRandomColour = (s: State) =>
+  colours[RNG.hash(s.currentId) % colours.length];
 
 /////////////// INITIAL STATE ////////////////////
 const INITIAL_ID = 1;
 const INITIAL_COORDS = { x: 60, y: -20 };
 
-const initialPiece: ReadonlyArray<Cube> = [
+const INITIAL_PIECE: ReadonlyArray<Cube> = [
   <Cube>{
     id: INITIAL_ID,
     x: INITIAL_COORDS.x,
     y: INITIAL_COORDS.y,
-    colour: "green",
+    colour: "yellow",
   },
   <Cube>{
     id: INITIAL_ID + 1,
     x: INITIAL_COORDS.x + 20,
     y: INITIAL_COORDS.y,
-    colour: "green",
+    colour: "yellow",
   },
   <Cube>{
     id: INITIAL_ID + 2,
     x: INITIAL_COORDS.x,
     y: INITIAL_COORDS.y + 20,
-    colour: "green",
+    colour: "yellow",
   },
   <Cube>{
     id: INITIAL_ID + 3,
     x: INITIAL_COORDS.x + 20,
     y: INITIAL_COORDS.y + 20,
-    colour: "green",
+    colour: "yellow",
   },
 ];
 
 const initialState: State = {
   gameEnd: false,
   currentId: 0,
-  piece: initialPiece,
+  piece: INITIAL_PIECE,
   cubes: [],
   exit: [],
+  score: 0,
 } as const;
 
 const nextPiece = (s: State): ReadonlyArray<Cube> => {
-  return squarePiece(s);
+  return createZ(s);
 };
 
 const collidedX = (a: Cube) => (b: Cube) =>
@@ -65,6 +70,17 @@ const collidedX = (a: Cube) => (b: Cube) =>
  */
 const collidedY = (top: Cube) => (bottom: Cube) =>
   top.x === bottom.x && top.y + Constants.CUBE_SIZE_PX === bottom.y;
+
+const calculateScore = (numRows: number): number =>
+  numRows === 1
+    ? 40
+    : numRows === 2
+    ? 100
+    : numRows === 3
+    ? 300
+    : numRows === 4
+    ? 1200
+    : 0;
 
 //////////////// ACTION CLASSES //////////////////////
 /**
@@ -133,39 +149,218 @@ class AddPiece implements Action {
   };
 }
 
-const squarePiece = (s: State): ReadonlyArray<Cube> => {
+const createI = (s: State): ReadonlyArray<Cube> => {
   return [
     <Cube>{
       id: s.currentId + 1,
       x: INITIAL_COORDS.x,
       y: INITIAL_COORDS.y,
-      colour: "green",
+      colour: "cyan",
     },
     <Cube>{
       id: s.currentId + 2,
-      x: INITIAL_COORDS.x + 20,
-      y: INITIAL_COORDS.y,
-      colour: "green",
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "cyan",
     },
     <Cube>{
       id: s.currentId + 3,
       x: INITIAL_COORDS.x,
-      y: INITIAL_COORDS.y + 20,
+      y: INITIAL_COORDS.y + 2*Constants.CUBE_SIZE_PX,
+      colour: "cyan",
+    },
+    <Cube>{
+      id: s.currentId + 4,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y + 3*Constants.CUBE_SIZE_PX,
+      colour: "cyan",
+    },
+  ];
+};
+
+const createJ = (s: State): ReadonlyArray<Cube> => {
+  return [
+    <Cube>{
+      id: s.currentId + 1,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y,
+      colour: "blue",
+    },
+    <Cube>{
+      id: s.currentId + 2,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "blue",
+    },
+    <Cube>{
+      id: s.currentId + 3,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "blue",
+    },
+    <Cube>{
+      id: s.currentId + 4,
+      x: INITIAL_COORDS.x + 2*Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "blue",
+    },
+  ];
+};
+
+const createL = (s: State): ReadonlyArray<Cube> => {
+  return [
+    <Cube>{
+      id: s.currentId + 1,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "orange",
+    },
+    <Cube>{
+      id: s.currentId + 2,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "orange",
+    },
+    <Cube>{
+      id: s.currentId + 3,
+      x: INITIAL_COORDS.x + 2 * Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "orange",
+    },
+    <Cube>{
+      id: s.currentId + 4,
+      x: INITIAL_COORDS.x + 2 * Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y,
+      colour: "orange",
+    },
+  ];
+};
+
+const createO = (s: State): ReadonlyArray<Cube> => {
+  return [
+    <Cube>{
+      id: s.currentId + 1,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y,
+      colour: "yellow",
+    },
+    <Cube>{
+      id: s.currentId + 2,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y,
+      colour: "yellow",
+    },
+    <Cube>{
+      id: s.currentId + 3,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "yellow",
+    },
+    <Cube>{
+      id: s.currentId + 4,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "yellow",
+    },
+  ];
+};
+
+const createS = (s: State): ReadonlyArray<Cube> => {
+  return [
+    <Cube>{
+      id: s.currentId + 1,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "green",
+    },
+    <Cube>{
+      id: s.currentId + 2,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "green",
+    },
+    <Cube>{
+      id: s.currentId + 3,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y,
       colour: "green",
     },
     <Cube>{
       id: s.currentId + 4,
-      x: INITIAL_COORDS.x + 20,
-      y: INITIAL_COORDS.y + 20,
+      x: INITIAL_COORDS.x + 2*Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y,
       colour: "green",
     },
   ];
 };
 
+const createT = (s: State): ReadonlyArray<Cube> => {
+  return [
+    <Cube>{
+      id: s.currentId + 1,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "purple",
+    },
+    <Cube>{
+      id: s.currentId + 2,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "purple",
+    },
+    <Cube>{
+      id: s.currentId + 3,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y,
+      colour: "purple",
+    },
+    <Cube>{
+      id: s.currentId + 4,
+      x: INITIAL_COORDS.x + 2*Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "purple",
+    },
+  ];
+};
+
+const createZ = (s: State): ReadonlyArray<Cube> => {
+  return [
+    <Cube>{
+      id: s.currentId + 1,
+      x: INITIAL_COORDS.x,
+      y: INITIAL_COORDS.y,
+      colour: "red",
+    },
+    <Cube>{
+      id: s.currentId + 2,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "red",
+    },
+    <Cube>{
+      id: s.currentId + 3,
+      x: INITIAL_COORDS.x + Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y,
+      colour: "red",
+    },
+    <Cube>{
+      id: s.currentId + 4,
+      x: INITIAL_COORDS.x + 2*Constants.CUBE_SIZE_PX,
+      y: INITIAL_COORDS.y + Constants.CUBE_SIZE_PX,
+      colour: "red",
+    },
+  ];
+};
+
+
+
 class Tick implements Action {
   constructor(public readonly elapsed: number) {}
-  apply = (s: State): State =>
-    Tick.filterVerticallyCollided(Tick.incrementIds(Tick.removeFullRows(s)));
+  apply = (s: State): State => {
+    return Tick.gameOver(
+      Tick.filterVerticallyCollided(Tick.incrementIds(Tick.removeFullRows(s)))
+    );
+  };
 
   static incrementIds = (s: State): State =>
     s.piece.length === 0
@@ -184,22 +379,32 @@ class Tick implements Action {
     const checkRow = (cube: Cube) =>
       s.cubes.filter((c) => c.y === cube.y).length === Constants.ROW_WIDTH;
 
-    const exitCubes = s.cubes.filter(checkRow); // All cubes in a full row
-    
-    // All cubes that aren't removed - we move them down if rows are removed.
-    // The distance to move down is calculated by the number of rows
-    // to be removed (exitCubes length // row width) * cube size
-    const newCubes = difference(s.cubes)(exitCubes)
-      .map((c) =>
+    // All cubes in full rows (to be removed)
+    const exitCubes = s.cubes.filter(checkRow);
+    const numRowsRemoved = Math.floor(exitCubes.length / Constants.ROW_WIDTH);
+
+    // The lowest y coordinate of cubes that are removed.
+    // So, we must move cubes above this down.
+    const moveAboveY = Math.max(...exitCubes.map((x) => x.y));
+    // Cubes that are not removed
+    const newCubes = difference(s.cubes)(exitCubes);
+    // Cubes that need to be shifted down
+    const cubesToShift = newCubes.filter((c) => c.y < moveAboveY);
+    // Those cubes are moved down
+    const shiftedCubes = cubesToShift.map(
+      (c) =>
         <Cube>{
           ...c,
-          y: c.y + (Math.floor(exitCubes.length / Constants.ROW_WIDTH) * Constants.CUBE_SIZE_PX),
+          y: c.y + numRowsRemoved * Constants.CUBE_SIZE_PX,
         }
     );
+    // All of the cubes that were not removed, with those shifted that needed to be.
+    const cubesOut = difference(newCubes)(cubesToShift).concat(shiftedCubes);
     return {
       ...s,
-      cubes: newCubes,
+      cubes: cubesOut,
       exit: exitCubes,
+      score: s.score + calculateScore(numRowsRemoved),
     };
   };
 
@@ -211,6 +416,13 @@ class Tick implements Action {
       ...s,
       piece: verticalCollision ? [] : s.piece,
       cubes: verticalCollision ? s.cubes.concat(s.piece) : s.cubes,
+    };
+  };
+
+  static gameOver = (s: State): State => {
+    return {
+      ...s,
+      gameEnd: s.cubes.filter((c: Cube) => c.y <= 0).length > 0,
     };
   };
 }
