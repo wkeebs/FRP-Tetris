@@ -1,6 +1,8 @@
+import { fromEvent } from "rxjs";
 import { Move } from "./state";
 import { Block, Cube, State, Viewport } from "./types";
 import { attr, isNotNullOrUndefined } from "./util";
+import { main } from "./main";
 
 export { initialiseView, updateView };
 
@@ -26,31 +28,54 @@ const createSvgElement = (
 };
 
 /**
- * Impurely moves an SVG element.
- *
- * @param elem
- * @param coords
- */
-const moveSvgElement = (elem: SVGElement) => (move: Move) => {
-  elem.setAttribute("x", String(move.x));
-  elem.setAttribute("y", String(move.y));
-};
-
-/**
  * Displays a SVG element on the canvas. Brings to foreground.
  * @param elem SVG element to display
  */
-export const show = (elem: SVGGraphicsElement) => {
-  elem.setAttribute("visibility", "visible");
-  elem.parentNode!.appendChild(elem);
+export const show = (elem: SVGGraphicsElement | HTMLElement) => {
+  if (elem) {
+    if (elem instanceof SVGGraphicsElement) {
+      elem.setAttribute("visibility", "visible");
+    } else {
+      elem.style.display = "inline";
+    }
+    elem.parentNode!.appendChild(elem);
+  }
+  else {
+    console.log("elem not found")
+  }
 };
 
 /**
  * Hides a SVG element on the canvas.
  * @param elem SVG element to hide
  */
-export const hide = (elem: SVGGraphicsElement) =>
-  elem.setAttribute("visibility", "hidden");
+export const hide = (elem: SVGGraphicsElement | HTMLElement) => {
+  if (elem) {
+    if (elem instanceof SVGGraphicsElement) {
+      elem.setAttribute("visibility", "hidden");
+    } else {
+      elem.style.display = "none";
+    }
+  }
+};
+
+const clearView = () => {
+  const svg = document.querySelector("#svgCanvas") as SVGGraphicsElement &
+    HTMLElement;
+  const gameover = document.querySelector("#gameOver") as SVGGraphicsElement &
+    HTMLElement;
+  const restart = document.querySelector("#restart") as HTMLElement;
+
+  svg.innerHTML = "";
+  svg.appendChild(gameover)
+  hide(gameover);
+  hide(restart);
+};
+
+const restartGame = () => {
+  clearView();
+  main();
+};
 
 const initialiseView = () => {
   const svg = document.querySelector("#svgCanvas") as SVGGraphicsElement &
@@ -60,6 +85,10 @@ const initialiseView = () => {
   const gameover = document.querySelector("#gameOver") as SVGGraphicsElement &
     HTMLElement;
   const container = document.querySelector("#main") as HTMLElement;
+  const restart = document.querySelector("#restart") as HTMLElement;
+
+  // Add listener to restart button
+  const restart$ = fromEvent(restart, "click").subscribe(restartGame);
 
   svg.setAttribute("height", `${Viewport.CANVAS_HEIGHT}`);
   svg.setAttribute("width", `${Viewport.CANVAS_WIDTH}`);
@@ -79,6 +108,7 @@ const updateView =
     const gameover = document.querySelector("#gameOver") as SVGGraphicsElement &
       HTMLElement;
     const container = document.querySelector("#main") as HTMLElement;
+    const restart = document.querySelector("#restart") as HTMLElement;
 
     // Text fields
     const levelText = document.querySelector("#levelText") as HTMLElement;
@@ -104,7 +134,7 @@ const updateView =
           y: `${cube.y}`,
           style: `fill: ${cube.colour}`,
         });
-        c.setAttribute('id', String(cube.id));
+        c.setAttribute("id", String(cube.id));
         root.appendChild(c);
       }
     };
@@ -128,9 +158,12 @@ const updateView =
 
     // game end
     if (s.gameEnd) {
+      console.log("game end")
       show(gameover);
+      show(restart);
       onFinish();
     } else {
       hide(gameover);
+      hide(restart);
     }
   };

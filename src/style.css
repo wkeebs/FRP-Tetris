@@ -98,3 +98,11 @@ svg rect {
   font-weight: bolder;
   text-align: center;
 }
+
+#restart {
+  display: none;
+  font-size: 1em;
+  font-weight: bolder;
+  text-align: center;
+  background-color: white;
+}
