@@ -1,7 +1,7 @@
 import { merge, interval, filter, fromEvent, map } from "rxjs";
 import { Constants, Key} from "./types";
 import { observeKey } from "./util";
-import { Move, Tick } from "./state";
+import { Move, Rotate, Tick } from "./state";
 
 export {
   key$,
@@ -12,6 +12,7 @@ export {
   moveLeft$,
   moveRight$,
   autoMoveDown$,
+  rotate$
 };
 
 const fromKey = (keyCode: Key) =>
@@ -42,6 +43,21 @@ const moveLeft$ = observeKey(
     () => new Move(0, Constants.CUBE_SIZE_PX)
   ),
   autoMoveDown$ = interval(Constants.FALL_RATE_MS).pipe(map((_) => new Move(0, Constants.CUBE_SIZE_PX)));
+
+/** Rotation streams */
+const rotateClockwise$ = observeKey(
+  "keydown",
+  "KeyX",
+  () => new Rotate(true, true)
+)
+
+const rotateCounterClockwise$ = observeKey(
+  "keydown",
+  "KeyZ",
+  () => new Rotate(false, true)
+)
+
+const rotate$ = merge(rotateClockwise$, rotateCounterClockwise$);
 
 /** Main movement stream */
 const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$);

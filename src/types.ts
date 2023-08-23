@@ -1,5 +1,5 @@
 export type { Key, Event, State, Cube, Action, Piece };
-export { Viewport, Constants, Block };
+export { Viewport, Constants, Block, Offset };
 
 const Viewport = {
   CANVAS_WIDTH: 200,
@@ -23,17 +23,17 @@ const Block = {
   HEIGHT: Viewport.CANVAS_HEIGHT / Constants.GRID_HEIGHT,
 };
 
-type Key = "KeyS" | "KeyA" | "KeyD";
+type Key = "KeyS" | "KeyA" | "KeyD" | "KeyX" | "KeyZ";
 
 type Event = "keydown" | "keyup" | "keypress";
 
-type Shape = "I" | "J" | "L" | "O" | "S" | "T" | "Z"
+type Shape = "I" | "J" | "L" | "O" | "S" | "T" | "Z";
 
 type State = Readonly<{
   gameEnd: boolean;
   currentId: number;
   piece: Piece;
-  droppedCubes: ReadonlyArray<Cube>;
+  staticCubes: ReadonlyArray<Cube>;
   exit: ReadonlyArray<Cube>;
   score: number;
   tickNo: number;
@@ -49,7 +49,8 @@ type Cube = Readonly<{
 type Piece = Readonly<{
   cubes: ReadonlyArray<Cube>;
   shape: Shape;
-}>
+  rotationIndex: number;
+}>;
 
 // Action Type
 /**
@@ -57,4 +58,107 @@ type Piece = Readonly<{
  */
 interface Action {
   apply(s: State): State;
+}
+
+// Offset Data
+class Offset {
+  static JLSTZ_OffsetData = [
+    [
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ],
+    [
+      [0, 0],
+      [1, 0],
+      [1, -1],
+      [0, 2],
+      [1, 2],
+    ],
+    [
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ],
+    [
+      [0, 0],
+      [-1, 0],
+      [1, -1],
+      [0, 2],
+      [-1, 2],
+    ],
+  ];
+
+  static I_OffsetData = [
+    [
+      [0, 0],
+      [-1, 0],
+      [2, 0],
+      [-1, 0],
+      [2, 0],
+    ],
+    [
+      [-1, 0],
+      [0, 0],
+      [0, 0],
+      [0, 1],
+      [0, -2],
+    ],
+    [
+      [-1, 1],
+      [1, 1],
+      [-2, 1],
+      [1, 0],
+      [-2, 0],
+    ],
+    [
+      [0, 1],
+      [0, 1],
+      [0, 1],
+      [0, -1],
+      [0, 2],
+    ],
+  ];
+
+  static O_OffsetData = [
+    [
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ],
+    [
+      [0, -1],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ],
+    [
+      [-1, -1],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ],
+    [
+      [-1, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ],
+  ];
+
+  static getOffset = (shape: string) =>
+    shape === "O"
+      ? this.O_OffsetData
+      : shape === "I"
+      ? this.I_OffsetData
+      : this.JLSTZ_OffsetData;
 }

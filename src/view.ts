@@ -138,7 +138,7 @@ const updateView =
         root.appendChild(c);
       }
     };
-    s.droppedCubes.forEach(updateCubeView(svg));
+    s.staticCubes.forEach(updateCubeView(svg));
     s.piece.cubes.forEach(updateCubeView(svg));
 
     // remove all cubes that need to be deleted
