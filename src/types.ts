@@ -34,6 +34,7 @@ type State = Readonly<{
   cubes: ReadonlyArray<Cube>;
   exit: ReadonlyArray<Cube>;
   score: number;
+  tickNo: number;
 }>;
 
 type Cube = Readonly<{
