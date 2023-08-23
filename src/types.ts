@@ -1,4 +1,4 @@
-export type { Key, Event, State, Cube, Action };
+export type { Key, Event, State, Cube, Action, Piece };
 export { Viewport, Constants, Block };
 
 const Viewport = {
@@ -27,11 +27,13 @@ type Key = "KeyS" | "KeyA" | "KeyD";
 
 type Event = "keydown" | "keyup" | "keypress";
 
+type Shape = "I" | "J" | "L" | "O" | "S" | "T" | "Z"
+
 type State = Readonly<{
   gameEnd: boolean;
   currentId: number;
-  piece: ReadonlyArray<Cube>;
-  cubes: ReadonlyArray<Cube>;
+  piece: Piece;
+  droppedCubes: ReadonlyArray<Cube>;
   exit: ReadonlyArray<Cube>;
   score: number;
   tickNo: number;
@@ -43,6 +45,11 @@ type Cube = Readonly<{
   y: number;
   colour: string;
 }>;
+
+type Piece = Readonly<{
+  cubes: ReadonlyArray<Cube>;
+  shape: Shape;
+}>
 
 // Action Type
 /**

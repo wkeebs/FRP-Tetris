@@ -138,8 +138,8 @@ const updateView =
         root.appendChild(c);
       }
     };
-    s.cubes.forEach(updateCubeView(svg));
-    s.piece.forEach(updateCubeView(svg));
+    s.droppedCubes.forEach(updateCubeView(svg));
+    s.piece.cubes.forEach(updateCubeView(svg));
 
     // remove all cubes that need to be deleted
     s.exit
@@ -158,7 +158,6 @@ const updateView =
 
     // game end
     if (s.gameEnd) {
-      console.log("game end")
       show(gameover);
       show(restart);
       onFinish();
