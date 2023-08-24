@@ -1,7 +1,7 @@
 import { merge, interval, filter, fromEvent, map } from "rxjs";
-import { Constants, Key} from "./types";
-import { observeKey } from "./util";
-import { Move, Rotate, Tick } from "./state";
+import { Constants, Key } from "./types";
+import { createRngStreamFromSource, observeKey } from "./util";
+import { AddPiece, Move, Rotate, Tick } from "./state";
 
 export {
   key$,
@@ -12,7 +12,8 @@ export {
   moveLeft$,
   moveRight$,
   autoMoveDown$,
-  rotate$
+  rotate$,
+  randomShape$
 };
 
 const fromKey = (keyCode: Key) =>
@@ -42,20 +43,29 @@ const moveLeft$ = observeKey(
     "KeyS",
     () => new Move(0, Constants.CUBE_SIZE_PX)
   ),
-  autoMoveDown$ = interval(Constants.FALL_RATE_MS).pipe(map((_) => new Move(0, Constants.CUBE_SIZE_PX)));
+  autoMoveDown$ = interval(Constants.FALL_RATE_MS).pipe(
+    map((_) => new Move(0, Constants.CUBE_SIZE_PX))
+  );
+
+// Random number generation - scaled to [0, 7] for the number of pieces
+const shapes = ["I", "J", "L", "O", "S", "T", "Z"]
+const randomShape$ = createRngStreamFromSource(interval(Constants.TICK_RATE_MS), 7)(283419).pipe(
+  map((x: number) => shapes[Math.floor(Math.abs(x))]),
+  map((shape: string) => new AddPiece(shape))
+)
 
 /** Rotation streams */
 const rotateClockwise$ = observeKey(
   "keydown",
   "KeyX",
   () => new Rotate(true, true)
-)
+);
 
 const rotateCounterClockwise$ = observeKey(
   "keydown",
   "KeyZ",
   () => new Rotate(false, true)
-)
+);
 
 const rotate$ = merge(rotateClockwise$, rotateCounterClockwise$);
 

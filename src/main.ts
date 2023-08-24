@@ -22,7 +22,7 @@ import { Observable, Subscription, merge } from "rxjs";
 import { scan } from "rxjs/operators";
 import { initialState, reduceState} from "./state.ts";
 import { initialiseView, updateView } from "./view.ts";
-import { autoMoveDown$, moveAllDirections$, rotate$, tick$ } from "./observable.ts";
+import { autoMoveDown$, moveAllDirections$, randomShape$, rotate$, tick$ } from "./observable.ts";
 import { Action, State } from "./types.ts";
 
 /** ==================== MAIN LOOP ==================== **/
@@ -33,7 +33,7 @@ import { Action, State } from "./types.ts";
 export function main() {
   initialiseView();
 
-    const action$: Observable<Action> = merge(tick$, moveAllDirections$, autoMoveDown$, rotate$),
+    const action$: Observable<Action> = merge(tick$, moveAllDirections$, autoMoveDown$, rotate$, randomShape$),
     state$: Observable<State> = action$.pipe(scan(reduceState, initialState)),
     subscription: Subscription = state$.subscribe(updateView(() => subscription.unsubscribe()));
 }

@@ -3,7 +3,17 @@ import { map, filter, scan } from "rxjs/operators";
 
 import { Key, Event, Cube, Constants } from "./types.ts";
 
-export { observeKey, RNG, isNotNullOrUndefined, attr, difference, collidedX, calculateScore, collidedY, modulo };
+export {
+  observeKey,
+  RNG,
+  isNotNullOrUndefined,
+  attr,
+  difference,
+  collidedX,
+  calculateScore,
+  collidedY,
+  modulo,
+};
 
 /**
  * Creates an Observable object for a given event.
@@ -43,9 +53,33 @@ abstract class RNG {
   public static hash = (seed: number) => (RNG.a * seed + RNG.c) % RNG.m;
 
   /**
-   * Takes hash value and scales it to the range [-1, 1]
+   * Takes hash value and scales it to the range [0, scale]
    */
-  public static scale = (hash: number) => (2 * hash) / (RNG.m - 1) - 1;
+  public static scale = (hash: number) => (scale: number) =>
+    (((2 * hash) / (RNG.m - 1) - 1) * scale) % scale;
+}
+
+/**
+ * Converts values in a stream to random numbers in the range [-1, 1]
+ *
+ * This usually would be implemented as an RxJS operator, but that is currently
+ * beyond the scope of this course.
+ *
+ * @param source$ The source Observable, elements of this are replaced with random numbers
+ * @param seed The seed for the random number generator
+ */
+export function createRngStreamFromSource<T extends number>(
+  source$: Observable<T>,
+  scale: number
+) {
+  return function createRngStream(seed: number = 0): Observable<number> {
+    const randomNumberStream = source$.pipe(
+      scan((accum: number, val: number) => {
+        return RNG.scale(RNG.hash(accum + val * seed))(scale);
+      })
+    );
+    return randomNumberStream;
+  };
 }
 
 /**

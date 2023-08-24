@@ -1,3 +1,5 @@
+import { first, onErrorResumeNext, take, takeLast } from "rxjs";
+import { randomShape$ } from "./observable";
 import {
   Action,
   Constants,
@@ -16,11 +18,9 @@ import {
   modulo,
 } from "./util";
 
-export { initialState, reduceState, Move, Tick, Rotate };
+export { initialState, reduceState, Move, Tick, Rotate, AddPiece };
 
-const colours = ["cyan", "yellow", "purple", "green", "blue", "red", "orange"];
-const getRandomColour = (s: State) =>
-  colours[RNG.hash(s.tickNo) % colours.length];
+// const colours = ["cyan", "yellow", "purple", "green", "blue", "red", "orange"];
 
 /////////////// INITIAL STATE ////////////////////
 const INITIAL_ID = 1;
@@ -161,13 +161,6 @@ const createPiece =
         };
   };
 
-const nextPiece = (s: State): Piece => {
-  const shapes = ["I", "J", "L", "O", "S", "T", "Z"];
-  // Our random choice of piece is reliant on the current tick number
-  const randIdx = RNG.hash(s.tickNo) % shapes.length;
-  return createPiece(s)(shapes[randIdx]);
-};
-
 //////////////// ACTION CLASSES //////////////////////
 class Move implements Action {
   constructor(public readonly x: number, public readonly y: number) {}
@@ -259,9 +252,14 @@ class Rotate implements Action {
         this.rotateCube(c, clockwise)(s.piece.cubes[0].x, s.piece.cubes[0].y)
       );
 
-    // Performs the rotation on the state
-    return this.offsetPiece(s)(newRotationIndex)
-
+      // Performs the rotation on the state
+      return this.offsetPiece({
+        ...s,
+        piece: <Piece>{
+          ...s.piece,
+          cubes: newCubes,
+        },
+      })(newRotationIndex);
     };
 
   /**
@@ -325,7 +323,10 @@ class Rotate implements Action {
           const finalOffsetX = offset1[0] - offset2[0];
           const finalOffsetY = offset1[1] - offset2[1];
 
-          const testMove = new Move(finalOffsetX * Constants.CUBE_SIZE_PX, finalOffsetY * Constants.CUBE_SIZE_PX);
+          const testMove = new Move(
+            finalOffsetX * Constants.CUBE_SIZE_PX,
+            finalOffsetY * Constants.CUBE_SIZE_PX
+          );
           const canMove = testMove.canMove(s);
           return canMove ? [finalOffsetX, finalOffsetY] : [0, 0];
         })
@@ -334,10 +335,13 @@ class Rotate implements Action {
       // Checks if any of the moves passed
       if (offsetCalcs.length > 0) {
         // If a move passed, we just take the first valid move.
-        const movePiece = new Move(offsetCalcs[0][0] * Constants.CUBE_SIZE_PX, offsetCalcs[0][1] * Constants.CUBE_SIZE_PX);
+        const movePiece = new Move(
+          offsetCalcs[0][0] * Constants.CUBE_SIZE_PX,
+          offsetCalcs[0][1] * Constants.CUBE_SIZE_PX
+        );
         return movePiece.apply(s);
       } else {
-        return s
+        return s;
       }
     };
 }
@@ -346,25 +350,9 @@ class Tick implements Action {
   constructor(public readonly elapsed: number) {}
   apply = (s: State): State => {
     return Tick.gameOver(
-      Tick.filterVerticallyCollided(Tick.incrementIds(Tick.removeFullRows(s)))
-    );
+      Tick.filterVerticallyCollided(Tick.removeFullRows(s)));
   };
 
-  static incrementIds = (s: State): State =>
-    s.piece.cubes.length === 0
-      ? {
-          ...s,
-          currentId: s.currentId + Constants.PIECE_SIZE,
-          piece: nextPiece({
-            ...s,
-            currentId: s.currentId + Constants.PIECE_SIZE,
-          }),
-          tickNo: s.tickNo + 1,
-        }
-      : {
-          ...s,
-          tickNo: s.tickNo + 1,
-        };
 
   static removeFullRows = (s: State): State => {
     // Checks if a row that contains a given cube is full, based on cube height
@@ -424,6 +412,30 @@ class Tick implements Action {
       gameEnd: s.staticCubes.filter((c: Cube) => c.y <= 0).length > 0,
     };
   };
+}
+
+class AddPiece implements Action {
+  constructor(readonly shape: string) {}
+  apply = (s: State): State => {
+    console.log("add piece")
+    return this.nextPiece(s)
+  }
+
+  nextPiece = (s: State): State =>
+    s.piece.cubes.length === 0
+      ? {
+          ...s,
+          currentId: s.currentId + Constants.PIECE_SIZE,
+          piece: createPiece({
+            ...s,
+            currentId: s.currentId + Constants.PIECE_SIZE,
+          })(this.shape),
+          tickNo: s.tickNo + 1,
+        }
+      : {
+          ...s,
+          tickNo: s.tickNo + 1,
+        };
 }
 
 //////////////// STATE UPDATES //////////////////////
