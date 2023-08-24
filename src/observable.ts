@@ -47,9 +47,10 @@ const moveLeft$ = observeKey(
     map((_) => new Move(0, Constants.CUBE_SIZE_PX))
   );
 
-// Random number generation - scaled to [0, 7] for the number of pieces
-const shapes = ["I", "J", "L", "O", "S", "T", "Z"]
-const randomShape$ = createRngStreamFromSource(interval(Constants.TICK_RATE_MS), 7)(283419).pipe(
+  const shapes = ["I", "J", "L", "O", "S", "T", "Z"]
+  // Random number generation - scaled to [0, 7] for the number of pieces
+  // An arbitrary interval of 10ms is chosen for each random piece creation.
+const randomShape$ = createRngStreamFromSource(interval(200), 7)(283419).pipe(
   map((x: number) => shapes[Math.floor(Math.abs(x))]),
   map((shape: string) => new AddPiece(shape))
 )

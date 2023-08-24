@@ -16,6 +16,7 @@ import {
   collidedY,
   difference,
   modulo,
+  validPosition,
 } from "./util";
 
 export { initialState, reduceState, Move, Tick, Rotate, AddPiece };
@@ -26,35 +27,8 @@ export { initialState, reduceState, Move, Tick, Rotate, AddPiece };
 const INITIAL_ID = 1;
 const INITIAL_COORDS = { x: 60, y: -20 };
 
-const INITIAL_CUBES: ReadonlyArray<Cube> = [
-  <Cube>{
-    id: INITIAL_ID,
-    x: INITIAL_COORDS.x,
-    y: INITIAL_COORDS.y,
-    colour: "yellow",
-  },
-  <Cube>{
-    id: INITIAL_ID + 1,
-    x: INITIAL_COORDS.x + 20,
-    y: INITIAL_COORDS.y,
-    colour: "yellow",
-  },
-  <Cube>{
-    id: INITIAL_ID + 2,
-    x: INITIAL_COORDS.x,
-    y: INITIAL_COORDS.y + 20,
-    colour: "yellow",
-  },
-  <Cube>{
-    id: INITIAL_ID + 3,
-    x: INITIAL_COORDS.x + 20,
-    y: INITIAL_COORDS.y + 20,
-    colour: "yellow",
-  },
-];
-
 const INITIAL_PIECE: Piece = {
-  cubes: INITIAL_CUBES,
+  cubes: [],
   shape: "O",
   rotationIndex: 0,
 };
@@ -163,6 +137,11 @@ const createPiece =
 
 //////////////// ACTION CLASSES //////////////////////
 class Move implements Action {
+  /**
+   * Moves a piece by a given number of pixels in the x and y directions.
+   * @param x
+   * @param y
+   */
   constructor(public readonly x: number, public readonly y: number) {}
   /**
    * Computes a new state based on the movement of the current piece.
@@ -176,13 +155,16 @@ class Move implements Action {
   static hitBottom = (c: Cube) =>
     c.y >= Viewport.CANVAS_HEIGHT - Constants.CUBE_SIZE_PX;
 
-  handleVerticalCollisions = (s: State): State => {
+  static verticallyCollided = (s: State): boolean => {
     const pieceHitBottom = s.piece.cubes.some(Move.hitBottom);
-    const verticalCollision =
-      s.piece.cubes.some((c) => s.staticCubes.some(collidedY(c))) ||
-      pieceHitBottom;
+    const verticalCollision = s.piece.cubes.some((c) =>
+      s.staticCubes.some(collidedY(c))
+    );
+    return !pieceHitBottom && !verticalCollision;
+  };
 
-    return {
+  handleVerticalCollisions = (s: State): State =>
+    <State>{
       ...s,
       piece: <Piece>{
         ...s.piece,
@@ -190,39 +172,42 @@ class Move implements Action {
           return {
             ...cube,
             x: cube.x,
-            y: cube.y + (verticalCollision ? 0 : this.y),
+            y: cube.y + (Move.verticallyCollided(s) ? this.y : 0),
           };
         }),
       },
     };
-  };
 
-  handleHorizontalCollisions = (s: State): State => {
-    // Has the piece collided with the right side of the board?
-    const atRight = s.piece.cubes.some(
-      (c: Cube) => c.x + this.x > Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX
-    );
-    // Has the piece collided with the left side of the board?
-    const atLeft = s.piece.cubes.some((c: Cube) => c.x + this.x < 0);
-    // Has the piece collided with another cube horizontally?
-    const pieceCollidedX = s.piece.cubes.some((c) =>
-      s.staticCubes.some(collidedX(c))
-    );
-    const horizontalCollision = pieceCollidedX || atLeft || atRight;
-    return {
+  static canMoveHorizontal =
+    (s: State) =>
+    (x: number): boolean => {
+      // Has the piece collided with the right side of the board?
+      const atRight = s.piece.cubes.some(
+        (c: Cube) => c.x + x > Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX
+      );
+      // Has the piece collided with the left side of the board?
+      const atLeft = s.piece.cubes.some((c: Cube) => c.x + x < 0);
+      // Has the piece collided with another cube horizontally?
+      const pieceCollidedX = s.piece.cubes.some((c) =>
+        s.staticCubes.some(collidedX(c))
+      );
+      return !pieceCollidedX && !atLeft && !atRight;
+    };
+
+  handleHorizontalCollisions = (s: State): State =>
+    <State>{
       ...s,
       piece: <Piece>{
         ...s.piece,
         cubes: s.piece.cubes.map((cube: Cube) => {
           return {
             ...cube,
-            x: cube.x + (horizontalCollision ? 0 : this.x),
+            x: cube.x + (Move.canMoveHorizontal(s)(this.x) ? this.x : 0),
             y: cube.y,
           };
         }),
       },
     };
-  };
 
   canMove = (s: State) => {
     return s !== this.apply(s);
@@ -239,6 +224,7 @@ class Rotate implements Action {
   rotatePiece =
     (s: State) =>
     (clockwise: boolean, shouldOffset: boolean): State => {
+      // if (s.piece.shape == "O")return s
       // Calculate the new index of orientation, based on whether we are going
       // clockwise or not. The module keeps it within range [0, 4].
       const newRotationIndex = modulo(
@@ -252,7 +238,7 @@ class Rotate implements Action {
         this.rotateCube(c, clockwise)(s.piece.cubes[0].x, s.piece.cubes[0].y)
       );
 
-      // Performs the rotation on the state
+      // Performs the offset on the state
       return this.offsetPiece({
         ...s,
         piece: <Piece>{
@@ -303,7 +289,7 @@ class Rotate implements Action {
     };
 
   /**
-   * Checks if a piece can be moved based on the current state of the board.
+   * Checks if a piece can be offset based on the current state of the board.
    * @param s The current state.
    * @param newRotationIndex The rotation index the piece is to be moved to.
    * @returns The updated state.
@@ -334,6 +320,7 @@ class Rotate implements Action {
 
       // Checks if any of the moves passed
       if (offsetCalcs.length > 0) {
+        console.log(offsetCalcs.length);
         // If a move passed, we just take the first valid move.
         const movePiece = new Move(
           offsetCalcs[0][0] * Constants.CUBE_SIZE_PX,
@@ -344,15 +331,31 @@ class Rotate implements Action {
         return s;
       }
     };
+
+  conflictTest =
+    (s: State) =>
+    (offsetX: number, offsetY: number): boolean => {
+      const movedCubes = s.piece.cubes.map(
+        (c) =>
+          <Cube>{
+            ...c,
+            x: c.x + offsetX * Constants.CUBE_SIZE_PX,
+            y: c.y + offsetY * Constants.CUBE_SIZE_PX,
+          }
+      );
+      const movedPiece = <Piece>{
+        ...s.piece,
+        cubes: movedCubes
+      }
+      return validPosition(s)(movedPiece)
+    };
 }
 
 class Tick implements Action {
   constructor(public readonly elapsed: number) {}
   apply = (s: State): State => {
-    return Tick.gameOver(
-      Tick.filterVerticallyCollided(Tick.removeFullRows(s)));
+    return Tick.gameOver(Tick.filterVerticallyCollided(Tick.removeFullRows(s)));
   };
-
 
   static removeFullRows = (s: State): State => {
     // Checks if a row that contains a given cube is full, based on cube height
@@ -416,10 +419,7 @@ class Tick implements Action {
 
 class AddPiece implements Action {
   constructor(readonly shape: string) {}
-  apply = (s: State): State => {
-    console.log("add piece")
-    return this.nextPiece(s)
-  }
+  apply = (s: State): State => this.nextPiece(s);
 
   nextPiece = (s: State): State =>
     s.piece.cubes.length === 0

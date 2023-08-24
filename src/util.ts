@@ -1,7 +1,15 @@
 import { Observable, fromEvent } from "rxjs";
 import { map, filter, scan } from "rxjs/operators";
 
-import { Key, Event, Cube, Constants } from "./types.ts";
+import {
+  Key,
+  Event,
+  Cube,
+  Constants,
+  Piece,
+  State,
+  Viewport,
+} from "./types.ts";
 
 export {
   observeKey,
@@ -13,6 +21,7 @@ export {
   calculateScore,
   collidedY,
   modulo,
+  validPosition
 };
 
 /**
@@ -130,6 +139,20 @@ const collidedX = (a: Cube) => (b: Cube) =>
  */
 const collidedY = (top: Cube) => (bottom: Cube) =>
   top.x === bottom.x && top.y + Constants.CUBE_SIZE_PX === bottom.y;
+
+const validPosition = (s: State) => (p: Piece) => {
+  const onBoard = p.cubes.some((c) => {
+    const xOn =
+      c.x <= Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX && c.x >= 0;
+    const yOn =
+      c.y <= Viewport.CANVAS_HEIGHT - Constants.CUBE_SIZE_PX && c.y >= 0;
+    return xOn && yOn;
+  });
+  const colliding = p.cubes.some(
+    (c) => s.staticCubes.some(collidedY(c)) || s.staticCubes.some(collidedX(c))
+  );
+  return onBoard && !colliding;
+};
 
 const calculateScore = (numRows: number): number =>
   numRows === 1
