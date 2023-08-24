@@ -33,7 +33,7 @@ import { Action, State } from "./types.ts";
 export function main() {
   initialiseView();
 
-    const action$: Observable<Action> = merge(tick$, moveAllDirections$, autoMoveDown$, rotate$, randomShape$),
+    const action$: Observable<Action> = merge(tick$, moveAllDirections$, rotate$, randomShape$),
     state$: Observable<State> = action$.pipe(scan(reduceState, initialState)),
     subscription: Subscription = state$.subscribe(updateView(() => subscription.unsubscribe()));
 }

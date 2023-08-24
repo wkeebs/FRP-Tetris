@@ -21,7 +21,7 @@ export {
   calculateScore,
   collidedY,
   modulo,
-  validPosition
+  validPosition,
 };
 
 /**
@@ -140,18 +140,15 @@ const collidedX = (a: Cube) => (b: Cube) =>
 const collidedY = (top: Cube) => (bottom: Cube) =>
   top.x === bottom.x && top.y + Constants.CUBE_SIZE_PX === bottom.y;
 
-const validPosition = (s: State) => (p: Piece) => {
-  const onBoard = p.cubes.some((c) => {
-    const xOn =
-      c.x <= Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX && c.x >= 0;
-    const yOn =
-      c.y <= Viewport.CANVAS_HEIGHT - Constants.CUBE_SIZE_PX && c.y >= 0;
-    return xOn && yOn;
-  });
-  const colliding = p.cubes.some(
-    (c) => s.staticCubes.some(collidedY(c)) || s.staticCubes.some(collidedX(c))
+const validPosition = (s: State) => (cube: Cube) => {
+  const xOn =
+    cube.x <= Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX && cube.x >= 0;
+  const yOn =
+    cube.y <= Viewport.CANVAS_HEIGHT - Constants.CUBE_SIZE_PX // && cube.y >= 0;
+  const colliding = s.staticCubes.some(
+    (c) => cube.x === c.x && cube.y === c.y
   );
-  return onBoard && !colliding;
+  return (xOn && yOn) && !colliding;
 };
 
 const calculateScore = (numRows: number): number =>

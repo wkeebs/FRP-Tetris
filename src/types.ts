@@ -60,7 +60,11 @@ interface Action {
   apply(s: State): State;
 }
 
-// Offset Data
+/**
+ * Offset data for wall kicks - adapted to our coordinate system.
+ * This data comes from a basic SRS rotation system, but I have adapted 
+ * the y-coordinates to match our SVG coords, as they are inverted in SRS.
+ */
 class Offset {
   static JLSTZ_OffsetData = [
     [
@@ -68,28 +72,30 @@ class Offset {
       [0, 0],
       [0, 0],
       [0, 0],
-      [0, 0],
     ],
     [
       [0, 0],
       [1, 0],
-      [1, -1],
-      [0, 2],
-      [1, 2],
-    ],
-    [
-      [0, 0],
-      [0, 0],
-      [0, 0],
-      [0, 0],
-      [0, 0],
-    ],
-    [
       [0, 0],
       [-1, 0],
-      [1, -1],
-      [0, 2],
-      [-1, 2],
+    ],
+    [
+      [0, 0],
+      [1, 1],
+      [0, 0],
+      [-1, 1],
+    ],
+    [
+      [0, 0],
+      [0, -2],
+      [0, 0],
+      [0, -2],
+    ],
+    [
+      [0, 0],
+      [1, -2],
+      [0, 0],
+      [-1, -2],
     ],
   ];
 
@@ -97,68 +103,35 @@ class Offset {
     [
       [0, 0],
       [-1, 0],
-      [2, 0],
-      [-1, 0],
-      [2, 0],
-    ],
-    [
-      [-1, 0],
-      [0, 0],
-      [0, 0],
-      [0, 1],
-      [0, -2],
-    ],
-    [
-      [-1, 1],
-      [1, 1],
-      [-2, 1],
-      [1, 0],
-      [-2, 0],
-    ],
-    [
-      [0, 1],
-      [0, 1],
-      [0, 1],
-      [0, -1],
-      [0, 2],
-    ],
-  ];
-
-  static O_OffsetData = [
-    [
-      [0, 0],
-      [0, 0],
-      [0, 0],
-      [0, 0],
-      [0, 0],
-    ],
-    [
-      [0, -1],
-      [0, 0],
-      [0, 0],
-      [0, 0],
-      [0, 0],
-    ],
-    [
       [-1, -1],
-      [0, 0],
-      [0, 0],
-      [0, 0],
-      [0, 0],
+      [0, -1],
     ],
     [
       [-1, 0],
       [0, 0],
+      [1, -1],
+      [0, -1],
+    ],
+    [
+      [2, 0],
       [0, 0],
-      [0, 0],
-      [0, 0],
+      [-2, -1],
+      [0, -1],
+    ],
+    [
+      [-1, 0],
+      [0, -1],
+      [1, 0],
+      [0, 1],
+    ],
+    [
+      [2, 0],
+      [0, 2],
+      [-2, 0],
+      [0, -2],
     ],
   ];
 
   static getOffset = (shape: string) =>
-    shape === "O"
-      ? this.O_OffsetData
-      : shape === "I"
-      ? this.I_OffsetData
-      : this.JLSTZ_OffsetData;
+    shape === "I" ? this.I_OffsetData : this.JLSTZ_OffsetData;
 }

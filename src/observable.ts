@@ -59,13 +59,13 @@ const randomShape$ = createRngStreamFromSource(interval(200), 7)(283419).pipe(
 const rotateClockwise$ = observeKey(
   "keydown",
   "KeyX",
-  () => new Rotate(true, true)
+  () => new Rotate(true)
 );
 
 const rotateCounterClockwise$ = observeKey(
   "keydown",
   "KeyZ",
-  () => new Rotate(false, true)
+  () => new Rotate(false)
 );
 
 const rotate$ = merge(rotateClockwise$, rotateCounterClockwise$);

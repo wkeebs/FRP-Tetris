@@ -25,7 +25,7 @@ export { initialState, reduceState, Move, Tick, Rotate, AddPiece };
 
 /////////////// INITIAL STATE ////////////////////
 const INITIAL_ID = 1;
-const INITIAL_COORDS = { x: 60, y: -20 };
+const INITIAL_COORDS = { x: 60, y: 0 };
 
 const INITIAL_PIECE: Piece = {
   cubes: [],
@@ -149,13 +149,18 @@ class Move implements Action {
    * @returns The new state.
    */
   apply = (s: State): State => {
-    return this.handleVerticalCollisions(this.handleHorizontalCollisions(s));
+    // const newCubes = s.piece.cubes.map(c => <Cube>{...c, x: c.x + this.x, y: c.y + this.y}),
+    //  newPiece = <Piece>{...s.piece, cubes: newCubes},
+    //  canMove = validPosition(s)(newPiece),
+    //  newState = <State>{...s, piece: canMove ? newPiece : s.piece}
+    // return newState
+    return this.handleCollisions(s);
   };
 
   static hitBottom = (c: Cube) =>
     c.y >= Viewport.CANVAS_HEIGHT - Constants.CUBE_SIZE_PX;
 
-  static verticallyCollided = (s: State): boolean => {
+  validY = (s: State): boolean => {
     const pieceHitBottom = s.piece.cubes.some(Move.hitBottom);
     const verticalCollision = s.piece.cubes.some((c) =>
       s.staticCubes.some(collidedY(c))
@@ -163,7 +168,7 @@ class Move implements Action {
     return !pieceHitBottom && !verticalCollision;
   };
 
-  handleVerticalCollisions = (s: State): State =>
+  handleCollisions = (s: State): State =>
     <State>{
       ...s,
       piece: <Piece>{
@@ -171,59 +176,63 @@ class Move implements Action {
         cubes: s.piece.cubes.map((cube: Cube) => {
           return {
             ...cube,
-            x: cube.x,
-            y: cube.y + (Move.verticallyCollided(s) ? this.y : 0),
+            x: cube.x + (this.validX(s) ? this.x : 0),
+            y: cube.y + (this.validY(s) ? this.y : 0),
           };
         }),
       },
     };
 
-  static canMoveHorizontal =
-    (s: State) =>
-    (x: number): boolean => {
-      // Has the piece collided with the right side of the board?
-      const atRight = s.piece.cubes.some(
-        (c: Cube) => c.x + x > Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX
-      );
-      // Has the piece collided with the left side of the board?
-      const atLeft = s.piece.cubes.some((c: Cube) => c.x + x < 0);
-      // Has the piece collided with another cube horizontally?
-      const pieceCollidedX = s.piece.cubes.some((c) =>
-        s.staticCubes.some(collidedX(c))
-      );
-      return !pieceCollidedX && !atLeft && !atRight;
-    };
-
-  handleHorizontalCollisions = (s: State): State =>
-    <State>{
-      ...s,
-      piece: <Piece>{
-        ...s.piece,
-        cubes: s.piece.cubes.map((cube: Cube) => {
-          return {
-            ...cube,
-            x: cube.x + (Move.canMoveHorizontal(s)(this.x) ? this.x : 0),
-            y: cube.y,
-          };
-        }),
-      },
-    };
-
-  canMove = (s: State) => {
-    return s !== this.apply(s);
+  validX = (s: State): boolean => {
+    // Has the piece collided with the right side of the board?
+    const atRight = s.piece.cubes.some(
+      (c: Cube) => c.x + this.x > Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX
+    );
+    // Has the piece collided with the left side of the board?
+    const atLeft = s.piece.cubes.some((c: Cube) => c.x + this.x < 0);
+    // Has the piece collided with another cube horizontally?
+    const pieceCollidedX = s.piece.cubes.some((c) =>
+      s.staticCubes.some(collidedX(c))
+    );
+    return !pieceCollidedX && !atLeft && !atRight;
   };
 }
 
 class Rotate implements Action {
-  constructor(
-    public readonly clockwise: boolean,
-    public readonly offset: boolean
-  ) {}
-  apply = (s: State): State => this.rotatePiece(s)(this.clockwise, this.offset);
+  constructor(public readonly clockwise: boolean) {}
+  apply = (s: State): State => {
+    if (s.piece.shape === "O") {
+      return s;
+    } else {
+      return this.rotatePiece(s)(this.clockwise);
+    }
+  };
+
+  // simpleRotatePiece = (s: State) => {
+  //   const newRotationIndex = modulo(
+  //       this.clockwise ? s.piece.rotationIndex + 1 : s.piece.rotationIndex - 1,
+  //       4
+  //     ),
+  //     newCubes = s.piece.cubes.map((c) =>
+  //       this.rotateCube(c, this.clockwise)(
+  //         s.piece.cubes[0].x,
+  //         s.piece.cubes[0].y
+  //       )
+  //     ),
+  //     newPiece = <Piece>{
+  //       ...s.piece,
+  //       cubes: newCubes,
+  //       rotationIndex: newRotationIndex,
+  //     };
+  //   return <State>{
+  //     ...s,
+  //     piece: newPiece,
+  //   };
+  // };
 
   rotatePiece =
     (s: State) =>
-    (clockwise: boolean, shouldOffset: boolean): State => {
+    (clockwise: boolean): State => {
       // if (s.piece.shape == "O")return s
       // Calculate the new index of orientation, based on whether we are going
       // clockwise or not. The module keeps it within range [0, 4].
@@ -238,14 +247,47 @@ class Rotate implements Action {
         this.rotateCube(c, clockwise)(s.piece.cubes[0].x, s.piece.cubes[0].y)
       );
 
-      // Performs the offset on the state
-      return this.offsetPiece({
+      // Check if the piece is in a valid place after rotation.
+      const unobstructed = newCubes.every(validPosition(s));
+
+      const newPiece = <Piece>{
+        ...s.piece,
+        cubes: newCubes,
+        rotationIndex: newRotationIndex,
+      };
+      const newState = <State>{
         ...s,
-        piece: <Piece>{
-          ...s.piece,
-          cubes: newCubes,
-        },
-      })(newRotationIndex);
+        piece: newPiece,
+      };
+
+      // If it is un-obstructed, we can return here,
+      if (unobstructed) {
+        return newState;
+      }
+
+      // If the piece is obstructed, we check for potential wall kick positions.
+      const validOffsets = this.checkOffsets(newState)(newRotationIndex);
+      console.log(`Valid Offsets = [${validOffsets}]`);
+
+      if (validOffsets.length > 0) {
+        console.log(`Valid Offset: ${validOffsets[0]}`);
+        // If we have a valid wall kick, we perform the first one we found.
+        const offSetData = validOffsets[0],
+          moveX = offSetData[0] * Constants.CUBE_SIZE_PX,
+          moveY = offSetData[1] * Constants.CUBE_SIZE_PX,
+          movePiece = new Move(moveX, moveY),
+          finalState = movePiece.apply({
+            ...newState,
+            piece: <Piece>{
+              ...newState.piece,
+              rotationIndex: newRotationIndex,
+            },
+          });
+        return finalState;
+      }
+
+      // If none of the wall kicks are valid, we cancel the rotation.
+      return s;
     };
 
   /**
@@ -288,51 +330,36 @@ class Rotate implements Action {
       };
     };
 
-  /**
-   * Checks if a piece can be offset based on the current state of the board.
-   * @param s The current state.
-   * @param newRotationIndex The rotation index the piece is to be moved to.
-   * @returns The updated state.
-   */
-  offsetPiece =
+  checkOffsets =
     (s: State) =>
-    (newRotationIndex: number): State => {
-      // Gets the offset data from the Offset class - so we can test rotations.
+    (newRotationIndex: number): number[][] => {
+      // Gets the offset data from the Offset class.
       const offsetData = Offset.getOffset(s.piece.shape);
 
-      // Check the offset tests
+      // Try to find a valid place to put the piece.
+      const INVALID_OFFSET = 999;
       const offsetCalcs = offsetData
         .map((test: number[][]) => {
-          const offset1 = test[s.piece.rotationIndex];
-          const offset2 = test[newRotationIndex];
-
-          const finalOffsetX = offset1[0] - offset2[0];
-          const finalOffsetY = offset1[1] - offset2[1];
-
-          const testMove = new Move(
-            finalOffsetX * Constants.CUBE_SIZE_PX,
-            finalOffsetY * Constants.CUBE_SIZE_PX
-          );
-          const canMove = testMove.canMove(s);
-          return canMove ? [finalOffsetX, finalOffsetY] : [0, 0];
+          const startOffset = test[s.piece.rotationIndex],
+            endOffset = test[newRotationIndex],
+            finalOffsetX = startOffset[0] - endOffset[0],
+            finalOffsetY = startOffset[1] - endOffset[1],
+            canMove = this.validOffset(s)(finalOffsetX, finalOffsetY);
+          if (canMove)
+            console.log(
+              `CAN MOVE: ${startOffset} to ${endOffset} -> ${finalOffsetX}, ${finalOffsetY}`
+            );
+          return canMove
+            ? [finalOffsetX, finalOffsetY]
+            : [INVALID_OFFSET, INVALID_OFFSET];
         })
-        .filter((val) => val[0] !== 0 && val[1] !== 0);
-
-      // Checks if any of the moves passed
-      if (offsetCalcs.length > 0) {
-        console.log(offsetCalcs.length);
-        // If a move passed, we just take the first valid move.
-        const movePiece = new Move(
-          offsetCalcs[0][0] * Constants.CUBE_SIZE_PX,
-          offsetCalcs[0][1] * Constants.CUBE_SIZE_PX
-        );
-        return movePiece.apply(s);
-      } else {
-        return s;
-      }
+        .filter((val) => {
+          val[0] !== INVALID_OFFSET && val[1] !== INVALID_OFFSET;
+        });
+      return offsetCalcs;
     };
 
-  conflictTest =
+  validOffset =
     (s: State) =>
     (offsetX: number, offsetY: number): boolean => {
       const movedCubes = s.piece.cubes.map(
@@ -343,11 +370,7 @@ class Rotate implements Action {
             y: c.y + offsetY * Constants.CUBE_SIZE_PX,
           }
       );
-      const movedPiece = <Piece>{
-        ...s.piece,
-        cubes: movedCubes
-      }
-      return validPosition(s)(movedPiece)
+      return movedCubes.every(validPosition(s));
     };
 }
 
