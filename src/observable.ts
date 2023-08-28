@@ -1,7 +1,7 @@
 import { merge, interval, filter, fromEvent, map } from "rxjs";
 import { Constants, Key } from "./types";
 import { createRngStreamFromSource, observeKey } from "./util";
-import { AddPiece, Move, Rotate, Tick } from "./state";
+import { AddPiece, Move, NewGame, Rotate, Tick } from "./state";
 
 export {
   key$,
@@ -11,9 +11,8 @@ export {
   moveDown$,
   moveLeft$,
   moveRight$,
-  autoMoveDown$,
   rotate$,
-  randomShape$
+  randomShape$,
 };
 
 const fromKey = (keyCode: Key) =>
@@ -42,29 +41,23 @@ const moveLeft$ = observeKey(
     "keydown",
     "KeyS",
     () => new Move(0, Constants.CUBE_SIZE_PX)
-  ),
-  autoMoveDown$ = interval(Constants.FALL_RATE_MS).pipe(
-    map((_) => new Move(0, Constants.CUBE_SIZE_PX))
   );
 
-  const shapes = ["I", "J", "L", "O", "S", "T", "Z"]
-  // Random number generation - scaled to [0, 7] for the number of pieces
-  // An arbitrary interval of 10ms is chosen for each random piece creation.
-const randomShape$ = createRngStreamFromSource(interval(200), 7)(283419).pipe(
-  map((x: number) => shapes[Math.floor(Math.abs(x))]),
-  map((shape: string) => new AddPiece(shape))
-)
+const shapes = ["I", "J", "L", "O", "S", "T", "Z"];
+// Random number generation - scaled to [0, 7] for the number of pieces
+// An arbitrary interval of 10ms is chosen for each random piece creation.
+const seed = 283419; // note the arbitrary seed here
+const randomShape$ = createRngStreamFromSource(
+  interval(200),
+  7 // for the number of pieces
+)(seed).pipe(map((x: number) => new AddPiece(shapes[Math.floor(Math.abs(x))])));
 
 /** Rotation streams */
-const rotateClockwise$ = observeKey(
-  "keydown",
-  "KeyX",
-  () => new Rotate(true)
-);
+const rotateClockwise$ = observeKey("keydown", "KeyX", () => new Rotate(true));
 
 const rotateCounterClockwise$ = observeKey(
   "keydown",
-  "KeyZ",
+  "KeyW",
   () => new Rotate(false)
 );
 
@@ -72,3 +65,4 @@ const rotate$ = merge(rotateClockwise$, rotateCounterClockwise$);
 
 /** Main movement stream */
 const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$);
+

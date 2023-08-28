@@ -9,13 +9,15 @@ const Viewport = {
 } as const;
 
 const Constants = {
-  TICK_RATE_MS: 100,
-  FALL_RATE_MS: 200,
+  TICK_RATE_MS: 10,
   GRID_WIDTH: 10,
   GRID_HEIGHT: 20,
   CUBE_SIZE_PX: 20,
   PIECE_SIZE: 4,
   ROW_WIDTH: 10,
+  LEVEL_GOAL: 5,
+  START_FALL_RATE_MS: 400,
+  FALL_RATE_LIMIT_MS: 100,
 } as const;
 
 const Block = {
@@ -23,7 +25,7 @@ const Block = {
   HEIGHT: Viewport.CANVAS_HEIGHT / Constants.GRID_HEIGHT,
 };
 
-type Key = "KeyS" | "KeyA" | "KeyD" | "KeyX" | "KeyZ";
+type Key = "KeyS" | "KeyA" | "KeyD" | "KeyX" | "KeyW";
 
 type Event = "keydown" | "keyup" | "keypress";
 
@@ -36,7 +38,11 @@ type State = Readonly<{
   staticCubes: ReadonlyArray<Cube>;
   exit: ReadonlyArray<Cube>;
   score: number;
-  tickNo: number;
+  fallRateMs: number;
+  level: number;
+  levelProgress: number;
+  highScore: number;
+  tickProgress: number;
 }>;
 
 type Cube = Readonly<{
@@ -62,7 +68,7 @@ interface Action {
 
 /**
  * Offset data for wall kicks - adapted to our coordinate system.
- * This data comes from a basic SRS rotation system, but I have adapted 
+ * This data comes from a basic SRS rotation system, but I have adapted
  * the y-coordinates to match our SVG coords, as they are inverted in SRS.
  */
 class Offset {

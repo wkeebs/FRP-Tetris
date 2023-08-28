@@ -35,13 +35,11 @@ export const show = (elem: SVGGraphicsElement | HTMLElement) => {
   if (elem) {
     if (elem instanceof SVGGraphicsElement) {
       elem.setAttribute("visibility", "visible");
-    } else {
-      elem.style.display = "inline";
     }
+    elem.classList.remove("hidden");
     elem.parentNode!.appendChild(elem);
-  }
-  else {
-    console.log("elem not found")
+  } else {
+    console.log("elem not found");
   }
 };
 
@@ -53,13 +51,12 @@ export const hide = (elem: SVGGraphicsElement | HTMLElement) => {
   if (elem) {
     if (elem instanceof SVGGraphicsElement) {
       elem.setAttribute("visibility", "hidden");
-    } else {
-      elem.style.display = "none";
     }
+    elem.classList.add("hidden");
   }
 };
 
-const clearView = () => {
+export const clearView = () => {
   const svg = document.querySelector("#svgCanvas") as SVGGraphicsElement &
     HTMLElement;
   const gameover = document.querySelector("#gameOver") as SVGGraphicsElement &
@@ -67,14 +64,9 @@ const clearView = () => {
   const restart = document.querySelector("#restart") as HTMLElement;
 
   svg.innerHTML = "";
-  svg.appendChild(gameover)
+  svg.appendChild(gameover);
   hide(gameover);
   hide(restart);
-};
-
-const restartGame = () => {
-  clearView();
-  main();
 };
 
 const initialiseView = () => {
@@ -82,13 +74,6 @@ const initialiseView = () => {
     HTMLElement;
   const preview = document.querySelector("#svgPreview") as SVGGraphicsElement &
     HTMLElement;
-  const gameover = document.querySelector("#gameOver") as SVGGraphicsElement &
-    HTMLElement;
-  const container = document.querySelector("#main") as HTMLElement;
-  const restart = document.querySelector("#restart") as HTMLElement;
-
-  // Add listener to restart button
-  const restart$ = fromEvent(restart, "click").subscribe(restartGame);
 
   svg.setAttribute("height", `${Viewport.CANVAS_HEIGHT}`);
   svg.setAttribute("width", `${Viewport.CANVAS_WIDTH}`);
@@ -153,15 +138,19 @@ const updateView =
         }
       });
 
-    // update score
+    // update level, score and high score
+    levelText.innerHTML = String(s.level);
     scoreText.innerHTML = String(s.score);
+    highScoreText.innerText = String(s.highScore);
 
     // game end
     if (s.gameEnd) {
       show(gameover);
+      restart.innerText = "Restart Game";
       show(restart);
       onFinish();
     } else {
+      show(container);
       hide(gameover);
       hide(restart);
     }

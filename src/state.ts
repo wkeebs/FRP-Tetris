@@ -1,4 +1,11 @@
-import { first, onErrorResumeNext, take, takeLast } from "rxjs";
+import {
+  Observable,
+  Subscription,
+  first,
+  onErrorResumeNext,
+  take,
+  takeLast,
+} from "rxjs";
 import { randomShape$ } from "./observable";
 import {
   Action,
@@ -18,14 +25,16 @@ import {
   modulo,
   validPosition,
 } from "./util";
+import { clearView, updateView } from "./view";
+import { gameLoop } from "./main";
+import { map, scan } from "rxjs/operators";
 
-export { initialState, reduceState, Move, Tick, Rotate, AddPiece };
+export { initialState, reduceState, Move, Tick, Rotate, AddPiece, NewGame };
 
 // const colours = ["cyan", "yellow", "purple", "green", "blue", "red", "orange"];
 
 /////////////// INITIAL STATE ////////////////////
-const INITIAL_ID = 1;
-const INITIAL_COORDS = { x: 60, y: 0 };
+const INITIAL_COORDS = { x: 60, y: -40 };
 
 const INITIAL_PIECE: Piece = {
   cubes: [],
@@ -40,10 +49,14 @@ const initialState: State = {
   staticCubes: [],
   exit: [],
   score: 0,
-  tickNo: 0,
+  fallRateMs: 300,
+  level: 1,
+  levelProgress: 0,
+  highScore: 0,
+  tickProgress: 0,
 } as const;
 
-// We build the piece so that the first cube is the rotation pivot.
+// We build the piece so that the first cube in the array is the rotation pivot.
 const createPiece =
   (s: State) =>
   (pType: string): Piece => {
@@ -208,28 +221,6 @@ class Rotate implements Action {
     }
   };
 
-  // simpleRotatePiece = (s: State) => {
-  //   const newRotationIndex = modulo(
-  //       this.clockwise ? s.piece.rotationIndex + 1 : s.piece.rotationIndex - 1,
-  //       4
-  //     ),
-  //     newCubes = s.piece.cubes.map((c) =>
-  //       this.rotateCube(c, this.clockwise)(
-  //         s.piece.cubes[0].x,
-  //         s.piece.cubes[0].y
-  //       )
-  //     ),
-  //     newPiece = <Piece>{
-  //       ...s.piece,
-  //       cubes: newCubes,
-  //       rotationIndex: newRotationIndex,
-  //     };
-  //   return <State>{
-  //     ...s,
-  //     piece: newPiece,
-  //   };
-  // };
-
   rotatePiece =
     (s: State) =>
     (clockwise: boolean): State => {
@@ -377,7 +368,11 @@ class Rotate implements Action {
 class Tick implements Action {
   constructor(public readonly elapsed: number) {}
   apply = (s: State): State => {
-    return Tick.gameOver(Tick.filterVerticallyCollided(Tick.removeFullRows(s)));
+    const checkRemoveRows = Tick.removeFullRows(s),
+      checkMoveDown = this.autoMoveDown(checkRemoveRows),
+      checkLevels = Tick.levelCheck(checkMoveDown),
+      checkGameOver = Tick.gameOver(checkLevels);
+    return checkGameOver;
   };
 
   static removeFullRows = (s: State): State => {
@@ -412,6 +407,7 @@ class Tick implements Action {
       staticCubes: cubesOut,
       exit: exitCubes,
       score: s.score + calculateScore(numRowsRemoved),
+      levelProgress: s.levelProgress + numRowsRemoved,
     };
   };
 
@@ -432,11 +428,68 @@ class Tick implements Action {
     };
   };
 
+  /**
+   * Checks whether we need to level up.
+   * If we do, update the state and increase the falling speed.
+   * The falling speed has a limit of 100ms.
+   * @param s The old state.
+   * @returns The new state.
+   */
+  static levelCheck = (s: State): State => {
+    return s.levelProgress >= Constants.LEVEL_GOAL
+      ? <State>{
+          ...s,
+          level: s.level + 1,
+          levelProgress: 0,
+          fallRateMs:
+            s.fallRateMs > Constants.FALL_RATE_LIMIT_MS
+              ? Constants.START_FALL_RATE_MS - 25 * s.level
+              : s.fallRateMs,
+        }
+      : s;
+  };
+
+  /**
+   * Checks whether the blocks have reached the top of the screen.
+   * If they have, initialise a game over.
+   * Also updates the high score if needed.
+   * @param s The old state.
+   * @returns The new state.
+   */
   static gameOver = (s: State): State => {
-    return {
-      ...s,
-      gameEnd: s.staticCubes.filter((c: Cube) => c.y <= 0).length > 0,
-    };
+    const gameIsOver = s.staticCubes.filter((c: Cube) => c.y <= 0).length > 0;
+    const newHighScore = s.score > s.highScore ? s.score : s.highScore;
+    return gameIsOver
+      ? <State>{
+          ...initialState,
+          gameEnd: true,
+          highScore: newHighScore,
+        }
+      : s;
+  };
+
+  /**
+   * Automatically moves the piece down if the the tickrate
+   * has crossed the threshold to move to the next down movement.
+   * We also only vertically collide here, as we want to be able to
+   * "slide" the piece into gaps.
+   * @param s
+   * @returns
+   */
+  autoMoveDown = (s: State): State => {
+    const newElapsed = s.tickProgress + Constants.TICK_RATE_MS;
+    if (newElapsed >= s.fallRateMs) {
+      const filteredState = Tick.filterVerticallyCollided(s),
+        resetTickProgress = <State>{ ...filteredState, tickProgress: 0 },
+        newMove = new Move(0, Constants.CUBE_SIZE_PX),
+        appliedState = newMove.apply(resetTickProgress);
+      return appliedState;
+    } else {
+      return <State>{
+        ...s,
+        tickProgress: newElapsed,
+      };
+    }
   };
 }
 
@@ -453,12 +506,24 @@ class AddPiece implements Action {
             ...s,
             currentId: s.currentId + Constants.PIECE_SIZE,
           })(this.shape),
-          tickNo: s.tickNo + 1,
         }
       : {
           ...s,
-          tickNo: s.tickNo + 1,
         };
+}
+
+class NewGame implements Action {
+  constructor(public readonly stream: Observable<Action>) {}
+  apply = (s: State) => {
+    const subscription: Subscription = this.stream
+      .pipe(scan(reduceState, s))
+      .subscribe(updateView(() => subscription.unsubscribe()));
+    return <State>{
+      ...s,
+      staticCubes: [],
+      exit: s.staticCubes,
+    };
+  };
 }
 
 //////////////// STATE UPDATES //////////////////////

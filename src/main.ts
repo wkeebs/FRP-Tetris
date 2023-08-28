@@ -18,24 +18,44 @@ import "./observable.ts";
 import "./state.ts";
 import "./view.ts";
 
-import { Observable, Subscription, merge } from "rxjs";
-import { scan } from "rxjs/operators";
-import { initialState, reduceState} from "./state.ts";
-import { initialiseView, updateView } from "./view.ts";
-import { autoMoveDown$, moveAllDirections$, randomShape$, rotate$, tick$ } from "./observable.ts";
-import { Action, State } from "./types.ts";
+import { Observable, Subscription, fromEvent, interval, merge } from "rxjs";
+import { map, scan } from "rxjs/operators";
+import { Move, NewGame, initialState, reduceState } from "./state.ts";
+import { clearView, initialiseView, updateView } from "./view.ts";
+import {
+  moveAllDirections$,
+  randomShape$,
+  rotate$,
+  tick$,
+} from "./observable.ts";
+import { Action, Constants, State } from "./types.ts";
 
-/** ==================== MAIN LOOP ==================== **/
+export function gameLoop(s: State = initialState) {
+  // Increases in speed based on the level
+  const action$: Observable<Action> = merge(
+    tick$,
+    moveAllDirections$,
+    rotate$,
+    randomShape$
+  );
+  // state$: Observable<State> = action$.pipe(scan(reduceState, s)),
+  // subscription: Subscription = state$.subscribe(
+  //   updateView(() => subscription.unsubscribe())
+  // );
+  const restartBtn = document.querySelector("#restart") as HTMLElement;
+  const gameLoop$ = fromEvent(restartBtn, "click").pipe(
+    map(() => new NewGame(action$))
+  ).pipe(scan(reduceState, s));
+  gameLoop$.subscribe(console.log);
+}
+
 /**
  * This is the function called on page load. Your main game loop
  * should be called here.
  */
 export function main() {
   initialiseView();
-
-    const action$: Observable<Action> = merge(tick$, moveAllDirections$, rotate$, randomShape$),
-    state$: Observable<State> = action$.pipe(scan(reduceState, initialState)),
-    subscription: Subscription = state$.subscribe(updateView(() => subscription.unsubscribe()));
+  gameLoop();
 }
 
 // The following simply runs your main function on window load.  Make sure to leave it in place.

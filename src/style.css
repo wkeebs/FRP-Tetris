@@ -99,10 +99,14 @@ svg rect {
   text-align: center;
 }
 
-#restart {
-  display: none;
-  font-size: 1em;
+#restart, #newGame {
+  font-size: 2rem;
   font-weight: bolder;
   text-align: center;
   background-color: white;
+  margin: 20px;
+}
+
+.hidden { 
+  display: none;
 }
