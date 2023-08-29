@@ -1,7 +1,33 @@
 :root {
-  background-color: rgb(161, 134, 98);
+  --jet: #2a2b2eff;
+  --davys-gray: #5a5a66ff;
+  --cambridge-blue: #a4c2a8ff;
+  --light-green: #aceb98ff;
+  --screamin-green: #87ff65ff;
+
+  --shadow: #1d5196;
+  --border: #041f41;
+  --main: #00377e;
+  --svgmain: #7696bf;
+  --title: #00377e;
+  --background: #00377e;
+  --text: #e3e3ef;
+
   padding: 2em;
   padding-top: 4em;
+
+  background-color: #e5e5f7;
+  opacity: 1;
+  background-image: radial-gradient(circle at center center, #2f338a, #e5e5f7),
+    repeating-radial-gradient(
+      circle at center center,
+      #2f338a,
+      #2f338a,
+      19px,
+      transparent 38px,
+      transparent 19px
+    );
+  background-blend-mode: multiply;
 }
 
 BODY,
@@ -26,11 +52,11 @@ H1 {
   font-size: 3em;
   font-family: arial, helvetica, sans-serif;
   font-weight: bolder;
-  background-color: rgb(255, 216, 165);
+  background-color: var(--title);
   border-radius: 0.05em;
-  padding: 0.1em 0.1em 0.1em 0.1em;
-  box-shadow: 0em 0em 0.15em rgb(107, 83, 50);
-  text-shadow: 0em 0em 1px rgb(107, 83, 50);
+  padding: 0.1em 0.5em 0.1em 0.5em;
+  box-shadow: 0em 0em 25px var(--shadow);
+  text-shadow: 0em 0em 1px var(--shadow);
 }
 
 .flex {
@@ -48,9 +74,9 @@ H1 {
 }
 
 main {
-  background-color: rgb(255, 216, 165);
+  background-color: var(--main);
   border-radius: 0.25em;
-  box-shadow: 0em 0em 0.5em rgb(107, 83, 50);
+  box-shadow: 0em 0em 0.5em var(--shadow);
   flex-wrap: wrap;
   padding: 1em;
   max-width: 400px;
@@ -58,7 +84,7 @@ main {
 
 svg {
   border-radius: 0.1em;
-  border: 5px solid rgb(65, 54, 40);
+  border: 5px solid var(--border);
 }
 
 svg rect {
@@ -67,11 +93,11 @@ svg rect {
 }
 
 #svgCanvas {
-  background-color: rgb(183, 151, 110);
+  background-color: var(--svgmain);
 }
 
 #svgPreview {
-  background-color: rgb(218, 180, 131);
+  background-color: var(--svgmain);
 }
 
 #info {
@@ -99,14 +125,88 @@ svg rect {
   text-align: center;
 }
 
-#restart, #newGame {
+#restart,
+#newGame {
   font-size: 2rem;
   font-weight: bolder;
   text-align: center;
-  background-color: white;
   margin: 20px;
+  background-color: var(--title);
+  color: var(--text);
+  padding: 0.1em 0.5em 0.1em 0.5em;
+  margin-top: 1em;
+  box-shadow: 0em 0em 25px var(--shadow);
+  text-shadow: 0em 0em 1px var(--shadow);
 }
 
-.hidden { 
+.text {
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.hidden {
   display: none;
+}
+
+/* GLITCH EFFECT */
+.glitch {
+  font-size: 3rem;
+  text-transform: uppercase;
+  color: var(--text);
+
+  text-shadow: 0.09em 0 0 rgba(255, 0, 0, 0.75),
+    -0.05em -0.005em 0 rgba(0, 255, 0, 0.75),
+    0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+
+  animation: glitch 300ms infinite;
+}
+
+@keyframes glitch {
+  0% {
+    text-shadow: 0.05em 0 0 rgba(255, 0, 0, 0.75),
+      -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
+      -0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+  }
+  14% {
+    text-shadow: 0.05em 0 0 rgba(255, 0, 0, 0.75),
+      -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
+      -0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+  }
+  15% {
+    text-shadow: -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
+      0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
+      -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
+  }
+  49% {
+    text-shadow: -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
+      0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
+      -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
+  }
+  50% {
+    text-shadow: 0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
+      0.05em 0 0 rgba(0, 255, 0, 0.75), 0 -0.05em 0 rgba(0, 0, 255, 0.75);
+  }
+  99% {
+    text-shadow: 0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
+      0.05em 0 0 rgba(0, 255, 0, 0.75), 0 -0.05em 0 rgba(0, 0, 255, 0.75);
+  }
+  100% {
+    text-shadow: -0.025em 0 0 rgba(255, 0, 0, 0.75),
+      -0.025em -0.025em 0 rgba(0, 255, 0, 0.75),
+      -0.025em -0.05em 0 rgba(0, 0, 255, 0.75);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
 }

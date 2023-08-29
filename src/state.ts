@@ -511,13 +511,19 @@ class AddPiece implements Action {
 class NewGame implements Action {
   constructor(public readonly stream: Observable<Action>) {}
   apply = (s: State) => {
+    // Reduce the source stream -> this is where all of the movement occurs.
     const source$ = this.stream.pipe(scan(reduceState, s));
     const subscription: Subscription = source$.subscribe(
       updateView(() => subscription.unsubscribe())
     );
-    const endState = source$.pipe(filter((s: State) => s.gameEnd), take(1)).subscribe((s: State) => {
-      console.log(s.highScore);
-      updateHighScore(s.highScore)});
+    const endState = source$
+      .pipe(
+        filter((s: State) => s.gameEnd),
+        take(1) // We only need to take the last state for the high score.
+      )
+      // Update the high score at the end of each round. only updated when the new 
+      // score is higher.
+      .subscribe((s: State) => updateHighScore(s.highScore));
     return s;
   };
 }

@@ -38,15 +38,11 @@ export function gameLoop(s: State = initialState) {
     rotate$,
     randomShape$
   );
-  // state$: Observable<State> = action$.pipe(scan(reduceState, s)),
-  // subscription: Subscription = state$.subscribe(
-  //   updateView(() => subscription.unsubscribe())
-  // );
-  const restartBtn = document.querySelector("#restart") as HTMLElement;
-  const gameLoop$ = fromEvent(restartBtn, "click").pipe(
-    map(() => new NewGame(action$))
-  ).pipe(scan(reduceState, s));
-  const subscription: Subscription = gameLoop$.subscribe(() => clearView());
+  const restartBtn = document.querySelector("#restart") as HTMLElement,
+    gameLoop$ = fromEvent(restartBtn, "click")
+      .pipe(map(() => new NewGame(action$)))
+      .pipe(scan(reduceState, s)),
+    subscription: Subscription = gameLoop$.subscribe(() => clearView()); // clear the view at the end of each round
 }
 
 /**
