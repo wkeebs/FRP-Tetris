@@ -46,7 +46,7 @@ export function gameLoop(s: State = initialState) {
   const gameLoop$ = fromEvent(restartBtn, "click").pipe(
     map(() => new NewGame(action$))
   ).pipe(scan(reduceState, s));
-  gameLoop$.subscribe(console.log);
+  const subscription: Subscription = gameLoop$.subscribe(() => clearView());
 }
 
 /**

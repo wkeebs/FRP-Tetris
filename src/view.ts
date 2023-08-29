@@ -4,7 +4,7 @@ import { Block, Cube, State, Viewport } from "./types";
 import { attr, isNotNullOrUndefined } from "./util";
 import { main } from "./main";
 
-export { initialiseView, updateView };
+export { initialiseView, updateView, updateHighScore };
 
 /**
  * Creates an SVG element with the given properties.
@@ -67,6 +67,12 @@ export const clearView = () => {
   svg.appendChild(gameover);
   hide(gameover);
   hide(restart);
+};
+
+const updateHighScore = (newHighScore: number) => {
+  const highScoreText = document.querySelector("#highScoreText") as HTMLElement,
+  oldHighScore = highScoreText.innerText
+  highScoreText.innerText = newHighScore > Number(oldHighScore) ? String(newHighScore) : oldHighScore;
 };
 
 const initialiseView = () => {
@@ -141,7 +147,7 @@ const updateView =
     // update level, score and high score
     levelText.innerHTML = String(s.level);
     scoreText.innerHTML = String(s.score);
-    highScoreText.innerText = String(s.highScore);
+    // highScoreText.innerText = String(s.highScore);
 
     // game end
     if (s.gameEnd) {

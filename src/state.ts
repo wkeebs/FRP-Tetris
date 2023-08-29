@@ -25,9 +25,9 @@ import {
   modulo,
   validPosition,
 } from "./util";
-import { clearView, updateView } from "./view";
+import { clearView, updateHighScore, updateView } from "./view";
 import { gameLoop } from "./main";
-import { map, scan } from "rxjs/operators";
+import { filter, last, map, scan } from "rxjs/operators";
 
 export { initialState, reduceState, Move, Tick, Rotate, AddPiece, NewGame };
 
@@ -258,10 +258,10 @@ class Rotate implements Action {
 
       // If the piece is obstructed, we check for potential wall kick positions.
       const validOffsets = this.checkOffsets(newState)(newRotationIndex);
-      console.log(`Valid Offsets = [${validOffsets}]`);
+      // console.log(`Valid Offsets = [${validOffsets}]`);
 
       if (validOffsets.length > 0) {
-        console.log(`Valid Offset: ${validOffsets[0]}`);
+        // console.log(`Valid Offset: ${validOffsets[0]}`);
         // If we have a valid wall kick, we perform the first one we found.
         const offSetData = validOffsets[0],
           moveX = offSetData[0] * Constants.CUBE_SIZE_PX,
@@ -336,10 +336,6 @@ class Rotate implements Action {
             finalOffsetX = startOffset[0] - endOffset[0],
             finalOffsetY = startOffset[1] - endOffset[1],
             canMove = this.validOffset(s)(finalOffsetX, finalOffsetY);
-          if (canMove)
-            console.log(
-              `CAN MOVE: ${startOffset} to ${endOffset} -> ${finalOffsetX}, ${finalOffsetY}`
-            );
           return canMove
             ? [finalOffsetX, finalOffsetY]
             : [INVALID_OFFSET, INVALID_OFFSET];
@@ -515,14 +511,14 @@ class AddPiece implements Action {
 class NewGame implements Action {
   constructor(public readonly stream: Observable<Action>) {}
   apply = (s: State) => {
-    const subscription: Subscription = this.stream
-      .pipe(scan(reduceState, s))
-      .subscribe(updateView(() => subscription.unsubscribe()));
-    return <State>{
-      ...s,
-      staticCubes: [],
-      exit: s.staticCubes,
-    };
+    const source$ = this.stream.pipe(scan(reduceState, s));
+    const subscription: Subscription = source$.subscribe(
+      updateView(() => subscription.unsubscribe())
+    );
+    const endState = source$.pipe(filter((s: State) => s.gameEnd), take(1)).subscribe((s: State) => {
+      console.log(s.highScore);
+      updateHighScore(s.highScore)});
+    return s;
   };
 }
 
