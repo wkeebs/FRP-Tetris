@@ -5,7 +5,7 @@ const Viewport = {
   CANVAS_WIDTH: 200,
   CANVAS_HEIGHT: 400,
   PREVIEW_WIDTH: 160,
-  PREVIEW_HEIGHT: 80,
+  PREVIEW_HEIGHT: 120,
 } as const;
 
 const Constants = {
@@ -35,6 +35,7 @@ type State = Readonly<{
   gameEnd: boolean;
   currentId: number;
   piece: Piece;
+  nextPiece: Piece;
   staticCubes: ReadonlyArray<Cube>;
   exit: ReadonlyArray<Cube>;
   score: number;

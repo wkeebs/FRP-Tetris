@@ -29,7 +29,16 @@ import { clearView, updateHighScore, updateView } from "./view";
 import { gameLoop } from "./main";
 import { filter, last, map, scan } from "rxjs/operators";
 
-export { initialState, reduceState, Move, Tick, Rotate, AddPiece, NewGame };
+export {
+  initialState,
+  reduceState,
+  Move,
+  Tick,
+  Rotate,
+  AddPiece,
+  NewGame,
+  createPiece,
+};
 
 // const colours = ["cyan", "yellow", "purple", "green", "blue", "red", "orange"];
 
@@ -46,6 +55,7 @@ const initialState: State = {
   gameEnd: false,
   currentId: 0,
   piece: INITIAL_PIECE,
+  nextPiece: INITIAL_PIECE,
   staticCubes: [],
   exit: [],
   score: 0,
@@ -498,9 +508,10 @@ class AddPiece implements Action {
       ? {
           ...s,
           currentId: s.currentId + Constants.PIECE_SIZE,
-          piece: createPiece({
+          piece: s.nextPiece,
+          nextPiece: createPiece({
             ...s,
-            currentId: s.currentId + Constants.PIECE_SIZE,
+            currentId: s.currentId + 2 * Constants.PIECE_SIZE,
           })(this.shape),
         }
       : {
@@ -521,7 +532,7 @@ class NewGame implements Action {
         filter((s: State) => s.gameEnd),
         take(1) // We only need to take the last state for the high score.
       )
-      // Update the high score at the end of each round. only updated when the new 
+      // Update the high score at the end of each round. only updated when the new
       // score is higher.
       .subscribe((s: State) => updateHighScore(s.highScore));
     return s;

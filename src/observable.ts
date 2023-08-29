@@ -48,7 +48,7 @@ const shapes = ["I", "J", "L", "O", "S", "T", "Z"];
 // An arbitrary interval of 10ms is chosen for each random piece creation.
 const seed = 283419; // note the arbitrary seed here
 const randomShape$ = createRngStreamFromSource(
-  interval(200),
+  interval(1), // every 1ms, to ensure a good random spread
   7 // for the number of pieces
 )(seed).pipe(map((x: number) => new AddPiece(shapes[Math.floor(Math.abs(x))])));
 

@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { Move } from "./state";
+import { Move, createPiece, initialState } from "./state";
 import { Block, Cube, State, Viewport } from "./types";
 import { attr, isNotNullOrUndefined } from "./util";
 import { main } from "./main";
@@ -132,6 +132,21 @@ const updateView =
     s.staticCubes.forEach(updateCubeView(svg));
     s.piece.cubes.forEach(updateCubeView(svg));
 
+    // Render the preview
+    preview.innerHTML = "";
+    const previewPiece = createPiece(initialState)(s.nextPiece.shape)
+    previewPiece.cubes.forEach((cube: Cube) => {
+      const c = createSvgElement(preview.namespaceURI, "rect", {
+        height: `${Block.HEIGHT}`,
+        width: `${Block.WIDTH}`,
+        x: `${cube.x - 10}`,
+        y: `${cube.y + 60}`,
+        style: `fill: ${cube.colour}`,
+      });
+      c.setAttribute("id", String(cube.id));
+      preview.appendChild(c);
+    })
+
     // remove all cubes that need to be deleted
     s.exit
       .map((cube) => document.getElementById(String(cube.id)))
@@ -147,7 +162,6 @@ const updateView =
     // update level, score and high score
     levelText.innerHTML = String(s.level);
     scoreText.innerHTML = String(s.score);
-    // highScoreText.innerText = String(s.highScore);
 
     // game end
     if (s.gameEnd) {
