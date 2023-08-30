@@ -1,3 +1,13 @@
+/**
+ * Contains observable functionality for the game.
+ *
+ * Initialises all movement keys, rotations, random shapes and ticks.
+ *
+ * @author William Keeble
+ */
+
+/////////////// [IMPORTS AND EXPORTS] ////////////////////
+
 import { merge, interval, filter, fromEvent, map } from "rxjs";
 import { Constants, Key } from "./types";
 import { createRngStreamFromSource, observeKey } from "./util";
@@ -15,18 +25,20 @@ export {
   randomShape$,
 };
 
-const fromKey = (keyCode: Key) =>
-  key$.pipe(filter(({ code }) => code === keyCode));
+/////////////// [OBSERVABLE DEFINITIONS] ////////////////////
 
 // All keypresses
 const key$ = fromEvent<KeyboardEvent>(document, "keypress");
+
+const fromKey = (keyCode: Key) =>
+  key$.pipe(filter(({ code }) => code === keyCode));
 
 // Game tickrate
 const tick$ = interval(Constants.TICK_RATE_MS).pipe(
   map((elapsed) => new Tick(elapsed))
 );
 
-/** Create an Observable for each movement direction */
+// Create an Observable for each movement direction
 const moveLeft$ = observeKey(
     "keydown",
     "KeyA",
@@ -43,16 +55,15 @@ const moveLeft$ = observeKey(
     () => new Move(0, Constants.CUBE_SIZE_PX)
   );
 
-const shapes = ["I", "J", "L", "O", "S", "T", "Z"];
 // Random number generation - scaled to [0, 7] for the number of pieces
-// An arbitrary interval of 10ms is chosen for each random piece creation.
+const shapes = ["I", "J", "L", "O", "S", "T", "Z"];
 const seed = 283419; // note the arbitrary seed here
 const randomShape$ = createRngStreamFromSource(
   interval(1), // every 1ms, to ensure a good random spread
   7 // for the number of pieces
 )(seed).pipe(map((x: number) => new AddPiece(shapes[Math.floor(Math.abs(x))])));
 
-/** Rotation streams */
+// Rotation streams.
 const rotateClockwise$ = observeKey("keydown", "KeyX", () => new Rotate(true));
 
 const rotateCounterClockwise$ = observeKey(
@@ -63,6 +74,5 @@ const rotateCounterClockwise$ = observeKey(
 
 const rotate$ = merge(rotateClockwise$, rotateCounterClockwise$);
 
-/** Main movement stream */
+// Main movement stream.
 const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$);
-

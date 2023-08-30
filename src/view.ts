@@ -1,3 +1,15 @@
+/**
+ * Manages the game view.
+ * 
+ * All visual interactions on the webpage are handled here.
+ * Specifically, most of the side effects occur here, and
+ * hence this is the most "impure" file that you will encounter.
+ *
+ * @author William Keeble
+ */
+
+/////////////// [IMPORTS AND EXPORTS] ////////////////////
+
 import { fromEvent } from "rxjs";
 import { Move, createPiece, initialState } from "./state";
 import { Block, Cube, State, Viewport } from "./types";
@@ -5,6 +17,8 @@ import { attr, isNotNullOrUndefined } from "./util";
 import { main } from "./main";
 
 export { initialiseView, updateView, updateHighScore };
+
+/////////////// [UTILITY FUNCTIONS FOR VIEW] ////////////////////
 
 /**
  * Creates an SVG element with the given properties.
@@ -56,6 +70,9 @@ export const hide = (elem: SVGGraphicsElement | HTMLElement) => {
   }
 };
 
+/**
+ * Clears the view, resetting to an initial "clean" state.
+ */
 export const clearView = () => {
   const svg = document.querySelector("#svgCanvas") as SVGGraphicsElement &
     HTMLElement;
@@ -69,12 +86,19 @@ export const clearView = () => {
   hide(restart);
 };
 
+/**
+ * Updates the high score, if it is larger than the old high score.
+ * @param newHighScore The potential new high score.
+ */
 const updateHighScore = (newHighScore: number) => {
   const highScoreText = document.querySelector("#highScoreText") as HTMLElement,
   oldHighScore = highScoreText.innerText
   highScoreText.innerText = newHighScore > Number(oldHighScore) ? String(newHighScore) : oldHighScore;
 };
 
+/**
+ * Initialises view elements
+ */
 const initialiseView = () => {
   const svg = document.querySelector("#svgCanvas") as SVGGraphicsElement &
     HTMLElement;
@@ -86,6 +110,8 @@ const initialiseView = () => {
   preview.setAttribute("height", `${Viewport.PREVIEW_HEIGHT}`);
   preview.setAttribute("width", `${Viewport.PREVIEW_WIDTH}`);
 };
+
+/////////////// [MAIN UPDATE VIEW] ////////////////////
 
 const updateView =
   (onFinish: () => void) =>
@@ -108,7 +134,7 @@ const updateView =
       "#highScoreText"
     ) as HTMLElement;
 
-    // if elements are null, exit function early
+    // If elements are null, exit function early
     if (!svg || !preview) return;
 
     // Update positions
@@ -147,7 +173,7 @@ const updateView =
       preview.appendChild(c);
     })
 
-    // remove all cubes that need to be deleted
+    // Remove all cubes that need to be deleted
     s.exit
       .map((cube) => document.getElementById(String(cube.id)))
       .filter(isNotNullOrUndefined)
@@ -159,11 +185,11 @@ const updateView =
         }
       });
 
-    // update level, score and high score
+    // Update level, score and high score
     levelText.innerHTML = String(s.level);
     scoreText.innerHTML = String(s.score);
 
-    // game end
+    // Game end
     if (s.gameEnd) {
       show(gameover);
       restart.innerText = "Restart Game";

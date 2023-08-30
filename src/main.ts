@@ -1,16 +1,14 @@
 /**
- * Inside this file you will use the classes and functions from rx.js
- * to add visuals to the svg element in index.html, animate them, and make them interactive.
- *
- * Study and complete the tasks in observable exercises first to get ideas.
- *
- * Course Notes showing Asteroids in FRP: https://tgdwyer.github.io/asteroids/
- *
- * You will be marked on your functional programming style
- * as well as the functionality that you implement.
- *
- * Document your code!
+ * The main file, ran on page load. 
+ * 
+ * This file is the initialisation point for all functionality in the game.
+ * 
+ * @author William Keeble
  */
+
+/////////////// [] ////////////////////
+
+/////////////// [IMPORTS AND EXPORTS] ////////////////////
 
 import "./style.css";
 
@@ -30,26 +28,34 @@ import {
 } from "./observable.ts";
 import { Action, Constants, State } from "./types.ts";
 
-export function gameLoop(s: State = initialState) {
-  // Increases in speed based on the level
+export {gameLoop, main}
+
+/////////////// [MAIN GAME FUNCTIONALITY] ////////////////////
+
+function gameLoop(s: State = initialState) {
+  /**
+   * Initialises a main game loop.
+   * @param s The state.
+   */
+  // All actions streams consolidated here.
   const action$: Observable<Action> = merge(
     tick$,
     moveAllDirections$,
     rotate$,
     randomShape$
   );
-  const restartBtn = document.querySelector("#restart") as HTMLElement,
-    gameLoop$ = fromEvent(restartBtn, "click")
+  // Bind the new game button.
+  const newGameBtn = document.querySelector("#restart") as HTMLElement,
+    gameLoop$ = fromEvent(newGameBtn, "click")
       .pipe(map(() => new NewGame(action$)))
       .pipe(scan(reduceState, s)),
     subscription: Subscription = gameLoop$.subscribe(() => clearView()); // clear the view at the end of each round
 }
 
 /**
- * This is the function called on page load. Your main game loop
- * should be called here.
+ * Called on page load, initialises the view and game loop.
  */
-export function main() {
+function main() {
   initialiseView();
   gameLoop();
 }

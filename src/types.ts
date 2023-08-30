@@ -1,6 +1,15 @@
+/**
+ * All types and constants required in the game.
+ *
+ * We also define the offset data for the wall kicks here.
+ *
+ * @author William Keeble
+ */
+
 export type { Key, Event, State, Cube, Action, Piece };
 export { Viewport, Constants, Block, Offset };
 
+/////////////// [CONSTANTS] ////////////////////
 const Viewport = {
   CANVAS_WIDTH: 200,
   CANVAS_HEIGHT: 400,
@@ -25,27 +34,34 @@ const Block = {
   HEIGHT: Viewport.CANVAS_HEIGHT / Constants.GRID_HEIGHT,
 };
 
+/////////////// [TYPE DEFINITIONS] ////////////////////
+
+// All keys needed
 type Key = "KeyS" | "KeyA" | "KeyD" | "KeyX" | "KeyW";
 
+// All events needed
 type Event = "keydown" | "keyup" | "keypress";
 
+// All shapes in the game
 type Shape = "I" | "J" | "L" | "O" | "S" | "T" | "Z";
 
+// The State.
 type State = Readonly<{
-  gameEnd: boolean;
-  currentId: number;
-  piece: Piece;
-  nextPiece: Piece;
-  staticCubes: ReadonlyArray<Cube>;
-  exit: ReadonlyArray<Cube>;
-  score: number;
-  fallRateMs: number;
-  level: number;
-  levelProgress: number;
-  highScore: number;
-  tickProgress: number;
+  gameEnd: boolean; // Is the game over?
+  currentId: number; // The current starting ID of the piece.
+  piece: Piece; // The current moving piece.
+  nextPiece: Piece; // The piece that will be spawned next. In the preview.
+  staticCubes: ReadonlyArray<Cube>; // All of the "dropped" cubes.
+  exit: ReadonlyArray<Cube>; // All cubes to be deleted.
+  score: number; // The current score.
+  fallRateMs: number; // The current fall rate of the piece.
+  level: number; // Current level.
+  levelProgress: number; // Current progress into the level (e.g., 100/200 score)
+  highScore: number; // Current highest score for this session.
+  tickProgress: number; // How far into the tick are we? Used to determine when to move down automatically.
 }>;
 
+// A single cube / tile.
 type Cube = Readonly<{
   id: number;
   x: number;
@@ -53,19 +69,19 @@ type Cube = Readonly<{
   colour: string;
 }>;
 
+// A piece - collection of cubes.
 type Piece = Readonly<{
   cubes: ReadonlyArray<Cube>;
   shape: Shape;
   rotationIndex: number;
 }>;
 
-// Action Type
-/**
- * Actions modify state
- */
+// Action type - modified state.
 interface Action {
   apply(s: State): State;
 }
+
+/////////////// [OFFSET DATA] ////////////////////
 
 /**
  * Offset data for wall kicks - adapted to our coordinate system.
@@ -73,6 +89,9 @@ interface Action {
  * the y-coordinates to match our SVG coords, as they are inverted in SRS.
  */
 class Offset {
+  /**
+   * Offset data for J, L, S, T and Z pieces.
+   */
   static JLSTZ_OffsetData = [
     [
       [0, 0],
@@ -106,6 +125,9 @@ class Offset {
     ],
   ];
 
+  /**
+   * Offset data for the I piece.
+   */
   static I_OffsetData = [
     [
       [0, 0],
@@ -139,6 +161,11 @@ class Offset {
     ],
   ];
 
+  /**
+   * Returns the offset for a given shape.
+   * @param shape The shape.
+   * @returns The offset data.
+   */
   static getOffset = (shape: string) =>
     shape === "I" ? this.I_OffsetData : this.JLSTZ_OffsetData;
 }

@@ -1,3 +1,11 @@
+/**
+ * Utility functions for use in calculation throughout the game.
+ *
+ * @author William Keeble
+ */
+
+/////////////// [IMPORTS AND EXPORTS] ////////////////////
+
 import { Observable, fromEvent } from "rxjs";
 import { map, filter, scan } from "rxjs/operators";
 
@@ -23,6 +31,8 @@ export {
   modulo,
   validPosition,
 };
+
+/////////////// [UTILITY FUNCTIONS] ////////////////////
 
 /**
  * Creates an Observable object for a given event.
@@ -120,6 +130,12 @@ function isNotNullOrUndefined<T extends object>(
   return input != null;
 }
 
+/**
+ * Checks if two cubes have collided horizontally.
+ * @param a The first cube.
+ * @param b The second cube.
+ * @returns Have they collided on the X-axis?
+ */
 const collidedX = (a: Cube) => (b: Cube) =>
   a.y === b.y // if vertically aligned
     ? a.x < b.x
@@ -129,7 +145,7 @@ const collidedX = (a: Cube) => (b: Cube) =>
 
 /**
  * Checks if one cube is on top of another.
- * We specify top and bottom, as we only want to check if
+ * We specify top and bottom cubes, as we only want to check if
  * moving pieces are landing on non-moving pieces, to avoid
  * moving pieces getting stuck under "hangovers".
  *
@@ -143,14 +159,16 @@ const collidedY = (top: Cube) => (bottom: Cube) =>
 const validPosition = (s: State) => (cube: Cube) => {
   const xOn =
     cube.x <= Viewport.CANVAS_WIDTH - Constants.CUBE_SIZE_PX && cube.x >= 0;
-  const yOn =
-    cube.y <= Viewport.CANVAS_HEIGHT - Constants.CUBE_SIZE_PX // && cube.y >= 0;
-  const colliding = s.staticCubes.some(
-    (c) => cube.x === c.x && cube.y === c.y
-  );
-  return (xOn && yOn) && !colliding;
+  const yOn = cube.y <= Viewport.CANVAS_HEIGHT - Constants.CUBE_SIZE_PX;
+  const colliding = s.staticCubes.some((c) => cube.x === c.x && cube.y === c.y);
+  return xOn && yOn && !colliding;
 };
 
+/**
+ * Calculates the score to be added, given the number of rows that are removed.
+ * @param numRows The number of rows.
+ * @returns The score.
+ */
 const calculateScore = (numRows: number): number =>
   numRows === 1
     ? 40
