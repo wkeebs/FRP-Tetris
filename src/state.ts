@@ -73,6 +73,7 @@ const initialState: State = {
   levelProgress: 0,
   highScore: 0,
   tickProgress: 0,
+  dropPreview: [],
 } as const;
 
 /////////////// [PIECE CREATION] ////////////////////
@@ -451,8 +452,10 @@ class Tick implements Action {
    * @returns The new state.
    */
   apply = (s: State): State => {
-    const checkRemoveRows = Tick.removeFullRows(s),
-      checkMoveDown = this.autoMoveDown(checkRemoveRows),
+    const inState = { ...s, exit: [] },
+      checkRemoveRows = Tick.removeFullRows(inState),
+      addPreviewCubes = this.previewDrop(checkRemoveRows),
+      checkMoveDown = this.autoMoveDown(addPreviewCubes),
       checkLevels = Tick.levelCheck(checkMoveDown),
       checkGameOver = Tick.gameOver(checkLevels);
     return checkGameOver;
@@ -491,7 +494,7 @@ class Tick implements Action {
     return {
       ...s,
       staticCubes: cubesOut,
-      exit: exitCubes,
+      exit: s.exit.concat(exitCubes),
       score: s.score + calculateScore(numRowsRemoved),
       levelProgress: s.levelProgress + numRowsRemoved,
     };
@@ -513,19 +516,30 @@ class Tick implements Action {
   static filterVerticallyCollided = (s: State): State => {
     // Has the piece vertically collided with the bottom of the
     // viewport or a static cube?
-    const pieceHitBottom = s.piece.cubes.some(Move.hitBottom),
-      verticalCollision =
-        s.piece.cubes.some((c) => s.staticCubes.some(collidedY(c))) ||
-        pieceHitBottom;
-    return {
+    const pieceHitBottom = s.piece.cubes.some(Move.hitBottom);
+    const verticalCollision =
+      s.piece.cubes.some((c) => s.staticCubes.some(collidedY(c))) ||
+      pieceHitBottom;
+
+    // We remove the drop preview cubes if the piece has collided vertically.
+    const exitCubes = verticalCollision
+      ? s.exit.concat(s.dropPreview)
+      : s.exit;
+
+    const newStaticCubes = verticalCollision
+      ? s.staticCubes.concat(s.piece.cubes)
+      : s.staticCubes;
+
+    const newPiece = <Piece>{
+      ...s.piece,
+      cubes: verticalCollision ? [] : s.piece.cubes,
+    };
+
+    return <State>{
       ...s,
-      piece: <Piece>{
-        ...s.piece,
-        cubes: verticalCollision ? [] : s.piece.cubes,
-      },
-      staticCubes: verticalCollision
-        ? s.staticCubes.concat(s.piece.cubes)
-        : s.staticCubes,
+      piece: newPiece,
+      staticCubes: newStaticCubes,
+      exit: exitCubes,
     };
   };
 
@@ -591,6 +605,25 @@ class Tick implements Action {
         tickProgress: newElapsed,
       };
     }
+  };
+
+  /**
+   * Updates the preview for where the piece will land.
+   * @param s The state.
+   * @returns Updated state.
+   */
+  previewDrop = (s: State): State => {
+    const dropPiece = new HardDown(),
+      droppedState = dropPiece.apply(s),
+      droppedPiece = droppedState.piece,
+      finalCubes = droppedPiece.cubes.map((c: Cube) => {
+        return <Cube>{ id: -1 * c.id, x: c.x, y: c.y, colour: "none" };
+      }),
+      finalState = <State>{
+        ...s,
+        dropPreview: finalCubes,
+      };
+    return finalState;
   };
 }
 

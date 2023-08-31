@@ -1,6 +1,6 @@
 /**
  * Manages the game view.
- * 
+ *
  * All visual interactions on the webpage are handled here.
  * Specifically, most of the side effects occur here, and
  * hence this is the most "impure" file that you will encounter.
@@ -11,7 +11,7 @@
 /////////////// [IMPORTS AND EXPORTS] ////////////////////
 
 import { fromEvent } from "rxjs";
-import { Move, createPiece, initialState } from "./state";
+import { HardDown, Move, createPiece, initialState } from "./state";
 import { Block, Cube, State, Viewport } from "./types";
 import { attr, isNotNullOrUndefined } from "./util";
 import { main } from "./main";
@@ -92,8 +92,9 @@ export const clearView = () => {
  */
 const updateHighScore = (newHighScore: number) => {
   const highScoreText = document.querySelector("#highScoreText") as HTMLElement,
-  oldHighScore = highScoreText.innerText
-  highScoreText.innerText = newHighScore > Number(oldHighScore) ? String(newHighScore) : oldHighScore;
+    oldHighScore = highScoreText.innerText;
+  highScoreText.innerText =
+    newHighScore > Number(oldHighScore) ? String(newHighScore) : oldHighScore;
 };
 
 /**
@@ -137,6 +138,15 @@ const updateView =
     // If elements are null, exit function early
     if (!svg || !preview) return;
 
+    // Find all SVG elements with the color "none" - these are the preview cubes
+    const cubesToRemove = preview.querySelectorAll('rect[color= "none"]');
+    cubesToRemove.forEach((cube) => {
+      try {
+        console.log("removed transparent cube");
+        svg.removeChild(cube);
+      } catch (e) {}
+    });
+
     // Update positions
     const updateCubeView = (root: HTMLElement) => (cube: Cube) => {
       const cubeElement = document.getElementById(String(cube.id));
@@ -155,12 +165,15 @@ const updateView =
         root.appendChild(c);
       }
     };
-    s.staticCubes.forEach(updateCubeView(svg));
-    s.piece.cubes.forEach(updateCubeView(svg));
+
+    const displayOnSvg = updateCubeView(svg);
+    s.staticCubes.forEach(displayOnSvg);
+    s.piece.cubes.forEach(displayOnSvg);
+    s.dropPreview.forEach(displayOnSvg);
 
     // Render the preview
     preview.innerHTML = "";
-    const previewPiece = createPiece(initialState)(s.nextPiece.shape)
+    const previewPiece = createPiece(initialState)(s.nextPiece.shape);
     previewPiece.cubes.forEach((cube: Cube) => {
       const c = createSvgElement(preview.namespaceURI, "rect", {
         height: `${Block.HEIGHT}`,
@@ -171,10 +184,7 @@ const updateView =
       });
       c.setAttribute("id", String(cube.id));
       preview.appendChild(c);
-    })
-
-    // Render the drop position for the current piece
-    
+    });
 
     // Remove all cubes that need to be deleted
     s.exit
