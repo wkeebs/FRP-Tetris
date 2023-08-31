@@ -11,7 +11,7 @@
 import { merge, interval, filter, fromEvent, map } from "rxjs";
 import { Constants, Key } from "./types";
 import { createRngStreamFromSource, observeKey } from "./util";
-import { AddPiece, Move, NewGame, Rotate, Tick } from "./state";
+import { AddPiece, HardDown, Move, NewGame, Rotate, Tick } from "./state";
 
 export {
   key$,
@@ -53,14 +53,19 @@ const moveLeft$ = observeKey(
     "keydown",
     "KeyS",
     () => new Move(0, Constants.CUBE_SIZE_PX)
-  );
+  ),
+  hardDown$ = observeKey(
+    "keydown",
+    "KeyQ",
+    () => new HardDown()
+  )
 
 // Random number generation - scaled to [0, 7] for the number of pieces
 const shapes = ["I", "J", "L", "O", "S", "T", "Z"];
-const seed = 283419; // note the arbitrary seed here
+const seed = 283419; // seed is arbitrary here
 const randomShape$ = createRngStreamFromSource(
   interval(1), // every 1ms, to ensure a good random spread
-  7 // for the number of pieces
+  7 // <-- the number of pieces in the game
 )(seed).pipe(map((x: number) => new AddPiece(shapes[Math.floor(Math.abs(x))])));
 
 // Rotation streams.
@@ -75,4 +80,4 @@ const rotateCounterClockwise$ = observeKey(
 const rotate$ = merge(rotateClockwise$, rotateCounterClockwise$);
 
 // Main movement stream.
-const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$);
+const moveAllDirections$ = merge(moveLeft$, moveRight$, moveDown$, hardDown$);

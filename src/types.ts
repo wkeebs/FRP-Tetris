@@ -37,7 +37,7 @@ const Block = {
 /////////////// [TYPE DEFINITIONS] ////////////////////
 
 // All keys needed
-type Key = "KeyS" | "KeyA" | "KeyD" | "KeyX" | "KeyW";
+type Key = "KeyS" | "KeyA" | "KeyD" | "KeyX" | "KeyW" | "KeyQ";
 
 // All events needed
 type Event = "keydown" | "keyup" | "keypress";

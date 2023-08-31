@@ -40,6 +40,7 @@ export {
   AddPiece,
   NewGame,
   createPiece,
+  HardDown,
 };
 
 /////////////// [INITIAL STATE] ////////////////////
@@ -655,6 +656,35 @@ class NewGame implements Action {
       // score is higher.
       .subscribe((s: State) => updateHighScore(s.highScore));
     return s;
+  };
+}
+
+class HardDown implements Action {
+  /**
+   * Hard down the piece - moves to the lowest possible position automatically.
+   */
+  constructor() {}
+  apply = (s: State) => {
+    // Determine the lowest possible position for each cube.
+    const differenceForEachCube = s.piece.cubes.map((c: Cube) => {
+        const alignedCubes = s.staticCubes.filter(
+          (cube: Cube) => cube.x === c.x
+        );
+        // If there are any cubes aligned, calculate the lowest possible position.
+        if (alignedCubes.length > 0) {
+          const maxHeight = Math.min(
+            ...alignedCubes.map((cube: Cube) => cube.y)
+          );
+          return maxHeight - c.y - Constants.CUBE_SIZE_PX;
+        }
+        // Otherwise, drop to the bottom.
+        return Viewport.CANVAS_HEIGHT - c.y - Constants.CUBE_SIZE_PX;
+      }),
+      smallestDifference = Math.min(...differenceForEachCube);
+
+    // Calculate the difference to move to the lowest position.
+    const movePiece = new Move(0, smallestDifference);
+    return movePiece.apply(s);
   };
 }
 

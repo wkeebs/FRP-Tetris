@@ -173,6 +173,9 @@ const updateView =
       preview.appendChild(c);
     })
 
+    // Render the drop position for the current piece
+    
+
     // Remove all cubes that need to be deleted
     s.exit
       .map((cube) => document.getElementById(String(cube.id)))
