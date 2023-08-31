@@ -46,7 +46,7 @@ export {
 /////////////// [INITIAL STATE] ////////////////////
 
 // Initial coordinates for use in spawning new pieces.
-const INITIAL_COORDS = { x: 60, y: -40 };
+const INITIAL_COORDS = { x: 60, y: -20 };
 
 // The initial piece. Arbitrary placeholder.
 const INITIAL_PIECE: Piece = {
@@ -157,7 +157,7 @@ const createPiece =
 
     const outCubes: ReadonlyArray<Cube> =
       pType === "I"
-        ? buildShape(cyanCube)(0, 1)(0, 0)(0, 2)(0, 3)
+        ? buildShape(cyanCube)(1, 0)(0, 0)(2, 0)(3, 0)
         : pType === "J"
         ? buildShape(blueCube)(1, 1)(0, 0)(0, 1)(2, 1)
         : pType === "L"
@@ -284,6 +284,7 @@ class Rotate implements Action {
    * @param s The state.
    * @returns The new state, with the piece rotated.
    */
+
   rotatePiece = (s: State): State => {
     // Calculate the new index of orientation, based on whether we are going
     // clockwise or not. The module keeps it within range [0, 4].
@@ -294,8 +295,11 @@ class Rotate implements Action {
 
     // This rotates each cube.
     // Note that the rotation centers around the first cube in the array.
+    const originX = s.piece.cubes[0].x;
+    const originY = s.piece.cubes[0].y;
+
     const newCubes = s.piece.cubes.map((c) =>
-      this.rotateCube(c, this.clockwise)(s.piece.cubes[0].x, s.piece.cubes[0].y)
+      this.rotateCube(c, this.clockwise)(originX, originY)
     );
 
     // Check if the piece is in a valid place after rotation.
@@ -340,6 +344,7 @@ class Rotate implements Action {
    * @param originY The y-coord of the origin cube
    * @returns A repositioned cube
    */
+
   rotateCube =
     (c: Cube, clockwise: boolean) =>
     (originX: number, originY: number): Cube => {
@@ -522,9 +527,7 @@ class Tick implements Action {
       pieceHitBottom;
 
     // We remove the drop preview cubes if the piece has collided vertically.
-    const exitCubes = verticalCollision
-      ? s.exit.concat(s.dropPreview)
-      : s.exit;
+    const exitCubes = verticalCollision ? s.exit.concat(s.dropPreview) : s.exit;
 
     const newStaticCubes = verticalCollision
       ? s.staticCubes.concat(s.piece.cubes)

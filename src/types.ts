@@ -24,7 +24,7 @@ const Constants = {
   CUBE_SIZE_PX: 20,
   PIECE_SIZE: 4,
   ROW_WIDTH: 10,
-  LEVEL_GOAL: 5,
+  LEVEL_GOAL: 4,
   START_FALL_RATE_MS: 400,
   FALL_RATE_LIMIT_MS: 100,
 } as const;
@@ -37,7 +37,7 @@ const Block = {
 /////////////// [TYPE DEFINITIONS] ////////////////////
 
 // All keys needed
-type Key = "KeyS" | "KeyA" | "KeyD" | "KeyX" | "KeyW" | "KeyQ";
+type Key = "KeyS" | "KeyA" | "KeyD" | "KeyW" | "KeyR" | "Space";
 
 // All events needed
 type Event = "keydown" | "keyup" | "keypress";
@@ -88,7 +88,8 @@ interface Action {
 /**
  * Offset data for wall kicks - adapted to our coordinate system.
  * This data comes from a basic SRS rotation system, but I have adapted
- * the y-coordinates to match our SVG coords, as they are inverted in SRS.
+ * the y-coordinates to match our SVG coords, as ours are inverted
+ * compared to SRS.
  */
 class Offset {
   /**
@@ -133,7 +134,7 @@ class Offset {
   static I_OffsetData = [
     [
       [0, 0],
-      [-1, 0],
+      [-2, 0],
       [-1, -1],
       [0, -1],
     ],
@@ -144,8 +145,8 @@ class Offset {
       [0, -1],
     ],
     [
-      [2, 0],
-      [0, 0],
+      [1, 0],
+      [0, 1],
       [-2, -1],
       [0, -1],
     ],

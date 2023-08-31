@@ -56,7 +56,7 @@ const moveLeft$ = observeKey(
   ),
   hardDown$ = observeKey(
     "keydown",
-    "KeyQ",
+    "Space",
     () => new HardDown()
   )
 
@@ -69,7 +69,7 @@ const randomShape$ = createRngStreamFromSource(
 )(seed).pipe(map((x: number) => new AddPiece(shapes[Math.floor(Math.abs(x))])));
 
 // Rotation streams.
-const rotateClockwise$ = observeKey("keydown", "KeyX", () => new Rotate(true));
+const rotateClockwise$ = observeKey("keydown", "KeyR", () => new Rotate(true));
 
 const rotateCounterClockwise$ = observeKey(
   "keydown",

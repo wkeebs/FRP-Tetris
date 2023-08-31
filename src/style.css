@@ -16,18 +16,8 @@
   padding: 2em;
   padding-top: 4em;
 
-  background-color: #e5e5f7;
-  opacity: 1;
-  background-image: radial-gradient(circle at center center, #2f338a, #e5e5f7),
-    repeating-radial-gradient(
-      circle at center center,
-      #2f338a,
-      #2f338a,
-      19px,
-      transparent 38px,
-      transparent 19px
-    );
-  background-blend-mode: multiply;
+  background: rgb(133,207,255);
+  background: radial-gradient(circle, rgba(133,207,255,1) 0%, rgba(0,53,147,1) 100%);
 }
 
 BODY,
