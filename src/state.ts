@@ -299,22 +299,22 @@ class Rotate implements Action {
     // Check if the piece is in a valid place after rotation.
     const unobstructed = newCubes.every(validPosition(s));
 
+    const newPiece = <Piece>{
+      ...s.piece,
+      cubes: newCubes,
+    };
+    const newState = <State>{
+      ...s,
+      piece: newPiece,
+    };
+
     // If it is un-obstructed, we can return here,
     if (unobstructed) {
-      const newPiece = <Piece>{
-        ...s.piece,
-        cubes: newCubes,
-        rotationIndex: newRotationIndex,
-      };
-      const newState = <State>{
-        ...s,
-        piece: newPiece,
-      };
       return newState;
     }
 
     // If the piece is obstructed, we check for potential wall kick positions.
-    const validOffsets = this.checkOffsets(s)(newRotationIndex);
+    const validOffsets = this.checkOffsets(newState)(newRotationIndex);
 
     if (validOffsets.length > 0) {
       // If we have a valid wall kick, we perform the first valid kick we find.
@@ -322,20 +322,7 @@ class Rotate implements Action {
         moveX = offSetData[0] * Constants.CUBE_SIZE_PX,
         moveY = offSetData[1] * Constants.CUBE_SIZE_PX,
         movePiece = new Move(moveX, moveY),
-        newCubes = s.piece.cubes.map((c) =>
-          this.rotateCube(c, this.clockwise)(
-            s.piece.cubes[0].x,
-            s.piece.cubes[0].y
-          )
-        ),
-        finalState = movePiece.apply({
-          ...s,
-          piece: <Piece>{
-            ...s.piece,
-            rotationIndex: newRotationIndex,
-            cubes: newCubes,
-          },
-        });
+        finalState = movePiece.apply(<State>{ ...newState, piece: newPiece });
       return finalState;
     }
 
@@ -401,12 +388,10 @@ class Rotate implements Action {
       const INVALID_OFFSET = 999; // Placeholder for invalid offsets.
       const offsetCalcs = offsetData
         .map((test: number[][]) => {
-          // For each "test", we test if we can rotate into that position.
+          // For each "test", we test if we can offset into that position.
           // The new positions are given by the offset from the original postition.
           const startOffset = test[s.piece.rotationIndex],
             endOffset = test[newRotationIndex]; // Get the offsets from the test
-
-          console.log(`${startOffset}, ${endOffset}`);
           // Calculate end offsets.
           const finalOffsetX = startOffset[0] - endOffset[0],
             finalOffsetY = startOffset[1] - endOffset[1],
@@ -415,11 +400,12 @@ class Rotate implements Action {
             ? [finalOffsetX, finalOffsetY]
             : [INVALID_OFFSET, INVALID_OFFSET];
         })
-        .filter((val) => {
-          // Only allow valid rotations.
-          return val[0] !== INVALID_OFFSET || val[1] !== INVALID_OFFSET;
-        });
-      console.log(`No. valid: ${offsetCalcs.length}`);
+        .filter(
+          (val) =>
+            // Only allow valid rotations.
+            val[0] !== INVALID_OFFSET
+        );
+
       return offsetCalcs; //
     };
 
@@ -438,7 +424,7 @@ class Rotate implements Action {
     (offsetX: number, offsetY: number): boolean => {
       // Temporarily moves the cubes.
       const movedCubes = s.piece.cubes.map(
-        (c) =>
+        (c: Cube) =>
           <Cube>{
             ...c,
             x: c.x + offsetX * Constants.CUBE_SIZE_PX,
