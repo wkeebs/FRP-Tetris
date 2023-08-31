@@ -49,6 +49,10 @@ const INITIAL_COORDS = { x: 60, y: -40 };
 
 // The initial piece. Arbitrary placeholder.
 const INITIAL_PIECE: Piece = {
+  rotationAxis: <Cube>{
+    x: 0,
+    y: 0,
+  },
   cubes: [],
   shape: "O",
   rotationIndex: 0,
@@ -149,47 +153,29 @@ const createPiece =
           ),
         ];
 
-    return pType === "I"
-      ? <Piece>{
-          cubes: buildShape(cyanCube)(0, 1)(0, 0)(0, 2)(0, 3),
-          shape: "I",
-          rotationIndex: 0,
-        }
-      : pType === "J"
-      ? <Piece>{
-          cubes: buildShape(blueCube)(1, 1)(0, 0)(0, 1)(2, 1),
-          shape: "J",
-          rotationIndex: 0,
-        }
-      : pType === "L"
-      ? <Piece>{
-          cubes: buildShape(orangeCube)(1, 1)(0, 1)(2, 1)(2, 0),
-          shape: "L",
-          rotationIndex: 0,
-        }
-      : pType === "O"
-      ? <Piece>{
-          cubes: buildShape(yellowCube)(0, 1)(0, 0)(1, 0)(1, 1),
-          shape: "O",
-          rotationIndex: 0,
-        }
-      : pType === "S"
-      ? <Piece>{
-          cubes: buildShape(greenCube)(1, 1)(0, 1)(1, 0)(2, 0),
-          shape: "S",
-          rotationIndex: 0,
-        }
-      : pType === "T"
-      ? <Piece>{
-          cubes: buildShape(purpleCube)(1, 1)(0, 1)(1, 0)(2, 1),
-          shape: "T",
-          rotationIndex: 0,
-        }
-      : <Piece>{
-          cubes: buildShape(redCube)(1, 1)(0, 0)(1, 0)(2, 1),
-          shape: "Z",
-          rotationIndex: 0,
-        };
+    const outCubes: ReadonlyArray<Cube> =
+      pType === "I"
+        ? buildShape(cyanCube)(0, 1)(0, 0)(0, 2)(0, 3)
+        : pType === "J"
+        ? buildShape(blueCube)(1, 1)(0, 0)(0, 1)(2, 1)
+        : pType === "L"
+        ? buildShape(orangeCube)(1, 1)(0, 1)(2, 1)(2, 0)
+        : pType === "O"
+        ? buildShape(yellowCube)(0, 1)(0, 0)(1, 0)(1, 1)
+        : pType === "S"
+        ? buildShape(greenCube)(1, 1)(0, 1)(1, 0)(2, 0)
+        : pType === "T"
+        ? buildShape(purpleCube)(1, 1)(0, 1)(1, 0)(2, 1)
+        : buildShape(redCube)(1, 1)(0, 0)(1, 0)(2, 1);
+
+    const outPiece = <Piece>{
+      rotationAxis: outCubes[0],
+      cubes: outCubes,
+      shape: pType,
+      rotationIndex: 0,
+    };
+
+    return outPiece;
   };
 
 /////////////// [ACTION CLASSES] ////////////////////
@@ -313,23 +299,22 @@ class Rotate implements Action {
     // Check if the piece is in a valid place after rotation.
     const unobstructed = newCubes.every(validPosition(s));
 
-    const newPiece = <Piece>{
-      ...s.piece,
-      cubes: newCubes,
-      rotationIndex: newRotationIndex,
-    };
-    const newState = <State>{
-      ...s,
-      piece: newPiece,
-    };
-
     // If it is un-obstructed, we can return here,
     if (unobstructed) {
+      const newPiece = <Piece>{
+        ...s.piece,
+        cubes: newCubes,
+        rotationIndex: newRotationIndex,
+      };
+      const newState = <State>{
+        ...s,
+        piece: newPiece,
+      };
       return newState;
     }
 
     // If the piece is obstructed, we check for potential wall kick positions.
-    const validOffsets = this.checkOffsets(newState)(newRotationIndex);
+    const validOffsets = this.checkOffsets(s)(newRotationIndex);
 
     if (validOffsets.length > 0) {
       // If we have a valid wall kick, we perform the first valid kick we find.
@@ -337,11 +322,18 @@ class Rotate implements Action {
         moveX = offSetData[0] * Constants.CUBE_SIZE_PX,
         moveY = offSetData[1] * Constants.CUBE_SIZE_PX,
         movePiece = new Move(moveX, moveY),
+        newCubes = s.piece.cubes.map((c) =>
+          this.rotateCube(c, this.clockwise)(
+            s.piece.cubes[0].x,
+            s.piece.cubes[0].y
+          )
+        ),
         finalState = movePiece.apply({
-          ...newState,
+          ...s,
           piece: <Piece>{
-            ...newState.piece,
+            ...s.piece,
             rotationIndex: newRotationIndex,
+            cubes: newCubes,
           },
         });
       return finalState;
@@ -412,9 +404,11 @@ class Rotate implements Action {
           // For each "test", we test if we can rotate into that position.
           // The new positions are given by the offset from the original postition.
           const startOffset = test[s.piece.rotationIndex],
-            endOffset = test[newRotationIndex], // Get the offsets from the test
-            // Calculate end offsets.
-            finalOffsetX = startOffset[0] - endOffset[0],
+            endOffset = test[newRotationIndex]; // Get the offsets from the test
+
+          console.log(`${startOffset}, ${endOffset}`);
+          // Calculate end offsets.
+          const finalOffsetX = startOffset[0] - endOffset[0],
             finalOffsetY = startOffset[1] - endOffset[1],
             canMove = this.validOffset(s)(finalOffsetX, finalOffsetY); // Check if we can move.
           return canMove
@@ -423,8 +417,9 @@ class Rotate implements Action {
         })
         .filter((val) => {
           // Only allow valid rotations.
-          val[0] !== INVALID_OFFSET && val[1] !== INVALID_OFFSET;
+          return val[0] !== INVALID_OFFSET || val[1] !== INVALID_OFFSET;
         });
+      console.log(`No. valid: ${offsetCalcs.length}`);
       return offsetCalcs; //
     };
 

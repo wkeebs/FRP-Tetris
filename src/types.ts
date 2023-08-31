@@ -71,6 +71,7 @@ type Cube = Readonly<{
 
 // A piece - collection of cubes.
 type Piece = Readonly<{
+  rotationAxis: Cube;
   cubes: ReadonlyArray<Cube>;
   shape: Shape;
   rotationIndex: number;
