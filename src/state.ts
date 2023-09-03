@@ -575,12 +575,11 @@ class Tick implements Action {
    */
   static gameOver = (s: State): State => {
     const gameIsOver = s.staticCubes.filter((c: Cube) => c.y <= 0).length > 0;
-    const newHighScore = s.score > s.highScore ? s.score : s.highScore;
     return gameIsOver
       ? <State>{
           ...initialState,
           gameEnd: true,
-          highScore: newHighScore,
+          highScore: s.score,
         }
       : s;
   };
