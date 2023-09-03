@@ -20,7 +20,6 @@ import {
   Viewport,
 } from "./types";
 import {
-  RNG,
   calculateScore,
   collidedX,
   collidedY,
