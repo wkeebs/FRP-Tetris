@@ -16,8 +16,12 @@
   padding: 2em;
   padding-top: 4em;
 
-  background: rgb(133,207,255);
-  background: radial-gradient(circle, rgba(133,207,255,1) 0%, rgba(0,53,147,1) 100%);
+  background: rgb(133, 207, 255);
+  background: radial-gradient(
+    circle,
+    rgba(133, 207, 255, 1) 0%,
+    rgba(0, 53, 147, 1) 100%
+  );
 }
 
 BODY,

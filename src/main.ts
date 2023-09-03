@@ -1,12 +1,10 @@
 /**
- * The main file, ran on page load. 
- * 
+ * The main file, ran on page load.
+ *
  * This file is the initialisation point for all functionality in the game.
- * 
+ *
  * @author William Keeble
  */
-
-/////////////// [] ////////////////////
 
 /////////////// [IMPORTS AND EXPORTS] ////////////////////
 
@@ -28,7 +26,7 @@ import {
 } from "./observable.ts";
 import { Action, Constants, State } from "./types.ts";
 
-export {gameLoop, main}
+export { gameLoop, main };
 
 /////////////// [MAIN GAME FUNCTIONALITY] ////////////////////
 

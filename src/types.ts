@@ -59,7 +59,7 @@ type State = Readonly<{
   levelProgress: number; // Current progress into the level (e.g., 100/200 score)
   highScore: number; // Current highest score for this session.
   tickProgress: number; // How far into the tick are we? Used to determine when to move down automatically.
-  dropPreview: ReadonlyArray<Cube> // All cubes that preview a hard drop landing.
+  dropPreview: ReadonlyArray<Cube>; // All cubes that preview a hard drop landing.
 }>;
 
 // A single cube / tile.
