@@ -85,6 +85,7 @@ abstract class RNG {
  * beyond the scope of this course.
  *
  * @param source$ The source Observable, elements of this are replaced with random numbers
+ * @param scale The number to scale our randomness to (e.g., scale = 7 -> [0,6])
  * @param seed The seed for the random number generator
  */
 export function createRngStreamFromSource<T extends number>(
