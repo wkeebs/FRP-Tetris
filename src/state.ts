@@ -688,7 +688,7 @@ class NewGame implements Action {
 
 class HardDown implements Action {
   /**
-   * Hard down the piece - moves to the lowest possible position automatically.
+   * Hard down the piece - moves to the lowest possible position automatically
    */
   constructor() {}
   apply = (s: State) => {
