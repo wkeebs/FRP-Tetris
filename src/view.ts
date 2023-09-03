@@ -95,6 +95,7 @@ const updateHighScore = (newHighScore: number) => {
     oldHighScore = highScoreText.innerText;
   highScoreText.innerText =
     newHighScore > Number(oldHighScore) ? String(newHighScore) : oldHighScore;
+  console.log(newHighScore, highScoreText.innerText);
 };
 
 /**
@@ -185,6 +186,9 @@ const updateView =
       c.setAttribute("id", String(cube.id));
       preview.appendChild(c);
     });
+
+    // Update high score if needed
+    updateHighScore(s.highScore);
 
     // Remove all cubes that need to be deleted
     s.exit

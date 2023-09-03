@@ -681,14 +681,7 @@ class NewGame implements Action {
     const subscription: Subscription = source$.subscribe(
       updateView(() => subscription.unsubscribe())
     );
-    const endState = source$
-      .pipe(
-        filter((s: State) => s.gameEnd),
-        take(1) // We only need to take the last state for the high score.
-      )
-      // Update the high score at the end of each round. only updated when the new
-      // score is higher.
-      .subscribe((s: State) => updateHighScore(s.highScore));
+    const endState = source$.pipe(filter((s: State) => s.gameEnd));
     return s;
   };
 }
