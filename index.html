@@ -1,0 +1,63 @@
+<html>
+  <head>
+    <title>FRP Tetris</title>
+    <script type="module" crossorigin src="/assets/index-c1e16895.js"></script>
+    <link rel="stylesheet" href="/assets/index-73868b3e.css">
+  </head>
+  <body>
+    <div class="pattern-bg"></div>
+    <h1 class="glitch">FRP Tetris</h1>
+    <main id="main" class="flex row">
+      <div id="controls" class="flex col text">
+        <h2>Controls</h2>
+        <div class="text">
+          <span class="left">A - Left</span>
+        </div>
+        <div class="text">
+          <span class="left">S - Down</span>
+        </div>
+        <div class="text">
+          <span class="left">D - Right</span>
+        </div>
+        <div class="text">
+          <span class="left">R - Rotate CW</span>
+        </div>
+        <div class="text">
+          <span class="left">W - Rotate CCW</span>
+        </div>
+        <div class="text">
+          <span class="left">Space - Hard Drop</span>
+        </div>
+      </div>
+      <svg id="svgCanvas">
+        <!-- game over text box -->
+        <g id="gameOver" visibility="hidden">
+          <rect x="26" y="120" fill="white" height="48" width="149"></rect>
+          <text x="36" y="150">Game Over</text>
+        </g>
+      </svg>
+      <div id="sideBar" class="flex col">
+        <svg id="svgPreview"></svg>
+        <div id="info" class="flex col">
+          <div class="text">
+            <span class="left">Level: </span>
+            <span class="right" id="levelText">0</span>
+          </div>
+          <div class="text">
+            <span class="left">Score: </span>
+            <span class="right" id="scoreText">0</span>
+          </div>
+          <div class="text">
+            <span class="left">Highscore: </span>
+            <span class="right" id="highScoreText">0</span>
+          </div>
+          <div class="tip">
+            <span class="left">5 Rows to Level Up!</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <button id="restart">New Game</button>
+    
+  </body>
+</html>
